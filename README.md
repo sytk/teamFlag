@@ -17,3 +17,9 @@ $ python run.py
 [*mediapipe-models*]: https://github.com/junhwanjang/mediapipe-models/tree/master/palm_detection/mediapipe_models
 [*mediapipe*]: https://github.com/google/mediapipe/tree/master/mediapipe/models
 [*hand_tracking*]: https://github.com/wolterlw/hand_tracking
+
+### requirement
+- tensorflow 1.14.0
+- opencv 4.4.0.42
+- vptree
+- scikitlearn
