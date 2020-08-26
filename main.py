@@ -33,9 +33,11 @@ while hasFrame:
     frame = cv2.flip(frame, 1)
 
     frame = detector.updateGesture(frame)
-    ges, palm = detector.getGesture()
+    ges = detector.getGesture()
+    palm = detector.getPalmPos()
+    depth = detector.getPalmDepth()
 
-    print(ges)
+    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)

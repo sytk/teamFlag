@@ -108,6 +108,7 @@ class HandGesture():
 
         self.palm_pos = [0,0]
         self.gesture = "first"
+        self.palm_depth = 0
 
     def get_pose(self, kp,box):
         x0, y0 = 0,0
@@ -154,15 +155,30 @@ class HandGesture():
                     cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
 
             palms = np.asarray([points[0], points[5],points[9],points[13], points[17]])
-            palm_pos = palms.mean(axis=0)
-            cv2.circle(frame, (int(palm_pos[0]), int(palm_pos[1])), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
+            self.palm_pos = palms.mean(axis=0)
+            cv2.circle(frame, (int(self.palm_pos[0]), int(self.palm_pos[1])), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
             # out.write(frame)
+            self.palm_depth = self.__computePalmDepth(points[5], points[17])
         else:
             self.gesture = "None"
         return frame
 
     def getGesture(self):
-        return self.gesture, self.palm_pos;
+        return self.gesture;
+
+    def getPalmPos(self):
+        return self.palm_pos;
+
+    def getPalmDepth(self):
+        return self.palm_depth;
+
+    def __computePalmDepth(self, a, b):
+        A = np.asarray(a)
+        B = np.asarray(b)
+        # # print(A,B)
+        # print(np.cross(A,B))
+        # return 0.5 * np.linalg.norm(np.cross(A,B))
+        return np.linalg.norm(A-B)
 
     @staticmethod
     def similarity(v1,v2):
