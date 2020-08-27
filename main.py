@@ -1,11 +1,11 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
 import os
 import cv2
 import numpy as np
 import time
 from hand_ges import HandGesture
+from image_override import ImageOverwriter
 
 WINDOW = "Hand Tracking"
 
@@ -13,19 +13,34 @@ cv2.namedWindow(WINDOW)
 capture = cv2.VideoCapture(0)
 capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-# capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-# capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
 
 if capture.isOpened():
     hasFrame, frame = capture.read()
 else:
     hasFrame = False
 
-# fourcc = cv2.VideoWriter_fourcc(*'XVID')
-# out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
-
 detector = HandGesture()
 
+writer = ImageOverwriter()
+writer.addImage("./dog.jpeg")
+
+
+#マウスの座標
+dptx = 200
+dpty = 200
+
+#マウスイベントが起こるとここへ来る
+def printCoor(event,x,y,flags,param):
+    global dptx, dpty #クリックした時の座標
+    if event == cv2.EVENT_LBUTTONDOWN:
+        dptx = x
+        dpty = y
+
+cv2.setMouseCallback("Hand Tracking",printCoor)
+
+x = 100
+y = 100
 while hasFrame:
     start = time.time()
 
@@ -37,7 +52,17 @@ while hasFrame:
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
 
-    print(ges, palm, depth)
+    if(ges=="swing"):
+        y, x = int(palm[1]), int(palm[0])
+
+    # print(palm)
+    writer.setPosition(y,x)
+    # writer.setPosition(int(palm[1]), int(palm[0]))
+    # writer.setPosition(dpty, dptx)
+
+    frame = writer.overwrite(frame)
+
+    # print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)

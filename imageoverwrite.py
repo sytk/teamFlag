@@ -19,6 +19,7 @@ imgheight = int(height/3)#240
 # 像をリサイズ
 resized_image = cv2.resize(image, (imgwidth,imgheight))
 reimgheight, reimgwidth = resized_image.shape[:2]
+
 print(reimgheight)
 print(reimgwidth)
 cutimage = resized_image.copy()
@@ -26,7 +27,6 @@ cutimage = resized_image.copy()
 #マウスの座標
 dptx = None
 dpty = None
-
 
 #マウスイベントが起こるとここへ来る
 def printCoor(event,x,y,flags,param):
