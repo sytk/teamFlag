@@ -1,5 +1,5 @@
 import os
-from src.hand_tracker__ import HandTracker
+from src.hand_tracker import HandTracker
 import cv2
 import numpy as np
 import math
