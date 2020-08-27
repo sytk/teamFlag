@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 import time
 from hand_ges import HandGesture
+import concurrent.futures
+import concurrent_process as cp
 
 WINDOW = "Hand Tracking"
 
@@ -26,20 +28,27 @@ else:
 
 detector = HandGesture()
 
+
 while hasFrame:
     start = time.time()
 
     hasFrame, frame = capture.read()
+    hasFrame_2, frame_2 = capture.read()
     frame = cv2.flip(frame, 1)
+    frame_2 = cv2.flip(frame_2, 1)
 
-    frame = detector.updateGesture(frame)
-    ges = detector.getGesture()
-    palm = detector.getPalmPos()
-    depth = detector.getPalmDepth()
+    executor = concurrent.futures.ThreadPoolExecutor()
+    executor.submit(cv2.imshow(WINDOW, frame), 1)
+    detector.updateGesture(frame_2, executor)
+    #
+    # frame = detector.updateGesture(frame)
+    # ges = detector.getGesture()
+    # palm = detector.getPalmPos()
+    # depth = detector.getPalmDepth()
+    # print(ges, palm, depth)
 
-    print(ges, palm, depth)
 
-    cv2.imshow(WINDOW, frame)
+    # cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
     if key == 27:
         break
