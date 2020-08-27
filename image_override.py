@@ -1,32 +1,60 @@
 import cv2
 
 class ImageOverwriter():
+    image_list = []
     def __init__(self):
-        self.image_list = []
+        pass
+        # self.image_list = []
 
     def addImage(self, path):
         img = cv2.imread(path,cv2.IMREAD_UNCHANGED)
-        h = int(img.shape[0]/4)
-        w = int(img.shape[1]/4)
-        resized_image = cv2.resize(img, (w,h))
+        img = cv2.resize(img, (int(img.shape[1]/4), int(img.shape[0]/4)))
 
-        dict = {"path":path, "img":resized_image, "scale":1, "state":1, "pos":(None,None)}
-        dict["pos"] = (200,200)
+        dict = {"path":path, "org_img":img, "img":img, "scale":1, "state":1, "pos":(None,None)}
         self.image_list.append(dict)
 
-    def setPosition(self, x, y):
-        self.image_list[0]["pos"] = (x,y)
+    def checkOverlap(self, pos):
+        list = []
+        for i, dict in enumerate(self.image_list):
+            x, y = dict["pos"][0], dict["pos"][1]
+
+            if x == None or y == None:
+                continue
+
+            half_w = int(dict["img"].shape[1]/2)
+            half_h = int(dict["img"].shape[0]/2)
+
+            left_top = (x - half_w, y - half_h)
+            right_bottom = (x + half_w, y + half_h)
+
+            continue_flag = False
+
+            for p, min, max in zip(pos, left_top, right_bottom):
+                if not min < p < max:
+                    continue_flag = True
+
+            if continue_flag: #pos isn't in img
+                continue
+
+            list.append(i) #pos is in img
+            # return i
+        return list
+
+
+    def setPosition(self, num, x, y):
+        self.image_list[num]["pos"] = (x,y)
 
     def overwrite(self, frame):
-
         for image in self.image_list:
             if image["pos"][0] == None or image["pos"][1] == None:
-                image["state"] == 0
+                image["state"] = 0
+            else:
+                image["state"] = 1
+
             if image["state"] == 1:
-                print(frame.shape)
                 cutimage = image["img"]
-                dptx = image["pos"][1]
-                dpty = image["pos"][0]
+                dptx = image["pos"][0]
+                dpty = image["pos"][1]
 
                 width = frame.shape[1]
                 height = frame.shape[0]
