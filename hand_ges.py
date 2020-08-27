@@ -1,4 +1,3 @@
-import concurrent
 import os
 from src.hand_tracker import HandTracker
 import cv2
@@ -9,7 +8,6 @@ from statistics import mean
 from sklearn.preprocessing import normalize
 import time
 import warnings
-import concurrent.futures
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -126,53 +124,47 @@ class HandGesture():
         v = a.transpose().flatten()
         return normalize([v], norm='l2')[0]
 
-    def updateGesture(self, frame, executor):
+    def updateGesture(self, frame):
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        futures = []
-        futures.append(executor.submit(self.detector(img), 2))
-        # hand = self.detector(img)
+        hand = self.detector(img)
 
-        # if hand is not None:  # and len(hand) > 0:
-            # points = hand['joints']
-            # box = hand['bbox']
-            # bkp = hand['base_joints']
+        if hand is not None:  # and len(hand) > 0:
+            points = hand['joints']
+            box = hand['bbox']
+            bkp = hand['base_joints']
 
-            # kp = self.get_pose(bkp, box)
-            #
-            # res = self.tree.get_n_nearest_neighbors(kp, 1)[0]
-            # a = np.mean(res[1])
-            # # print(res[0],np.where(idx_m == a)[0][0])
-            # idx = np.where(self.idx_m == a)[0][0]
-            # # print(self.indexes[idx])
-            # self.gesture = self.indexes[idx]
+            kp = self.get_pose(bkp, box)
 
-            # executor.submit(self.update_text(res, a, frame))
-            # if res[0] < 0.4:
-            #     idx = np.where(self.idx_m == a)[0][0]
-            #     font = cv2.FONT_HERSHEY_SIMPLEX
-            #     cv2.putText(frame,self.indexes[idx],(20,100), font, 2,(255,0,0),2,cv2.LINE_AA)
-            #     cv2.putText(frame, str(res[0]),(20,30), font, 1,(255,0,0),2,cv2.LINE_AA)
+            res = self.tree.get_n_nearest_neighbors(kp, 1)[0]
+            a = np.mean(res[1])
+            # print(res[0],np.where(idx_m == a)[0][0])
+            idx = np.where(self.idx_m == a)[0][0]
+            # print(self.indexes[idx])
+            self.gesture = self.indexes[idx]
 
-            # executor.submit(self.update_points(points, frame))
-            # if points is not None:
-            #     for point in points:
-            #         x, y = point
-            #         cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
-            #     for connection in self.connections:
-            #         x0, y0 = points[connection[0]]
-            #         x1, y1 = points[connection[1]]
-            #         cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
+            if res[0] < 0.4:
+                idx = np.where(self.idx_m == a)[0][0]
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(frame,self.indexes[idx],(20,100), font, 2,(255,0,0),2,cv2.LINE_AA)
+                cv2.putText(frame, str(res[0]),(20,30), font, 1,(255,0,0),2,cv2.LINE_AA)
 
-            # executor.submit(self.update_palm(points, frame))
-            # palms = np.asarray([points[0], points[5], points[9], points[13], points[17]])
-            # self.palm_pos = palms.mean(axis=0)
-            # cv2.circle(frame, (int(self.palm_pos[0]), int(self.palm_pos[1])), self.THICKNESS * 2, self.POINT_COLOR,
-            #            self.THICKNESS)
-            # # out.write(frame)
-            # self.palm_depth = self.__computePalmDepth(points[5], points[17])
-        # else:
-        #     self.gesture = "None"
-        # return frame
+            if points is not None:
+                for point in points:
+                    x, y = point
+                    cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
+                for connection in self.connections:
+                    x0, y0 = points[connection[0]]
+                    x1, y1 = points[connection[1]]
+                    cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
+
+            palms = np.asarray([points[0], points[5], points[9], points[13], points[17]])
+            self.palm_pos = palms.mean(axis=0)
+            cv2.circle(frame, (int(self.palm_pos[0]), int(self.palm_pos[1])), self.THICKNESS * 2, self.POINT_COLOR,
+                       self.THICKNESS)
+            # out.write(frame)
+            self.palm_depth = self.__computePalmDepth(points[5], points[17])
+        else:
+            self.gesture = "None"
 
     def getGesture(self):
         return self.gesture
@@ -190,30 +182,6 @@ class HandGesture():
         # print(np.cross(A,B))
         # return 0.5 * np.linalg.norm(np.cross(A,B))
         return np.linalg.norm(A - B)
-
-    def update_text(self, res, a, frame):
-        if res[0] < 0.4:
-            idx = np.where(self.idx_m == a)[0][0]
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(frame, self.indexes[idx], (20, 100), font, 2, (255, 0, 0), 2, cv2.LINE_AA)
-            cv2.putText(frame, str(res[0]), (20, 30), font, 1, (255, 0, 0), 2, cv2.LINE_AA)
-
-    def update_points(self, points, frame):
-        if points is not None:
-            for point in points:
-                x, y = point
-                cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
-            for connection in self.connections:
-                x0, y0 = points[connection[0]]
-                x1, y1 = points[connection[1]]
-                cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
-
-    def update_palm(self, points, frame):
-        palms = np.asarray([points[0], points[5], points[9], points[13], points[17]])
-        self.palm_pos = palms.mean(axis=0)
-        cv2.circle(frame, (int(self.palm_pos[0]), int(self.palm_pos[1])), self.THICKNESS * 2, self.POINT_COLOR,
-                   self.THICKNESS)
-        self.palm_depth = self.__computePalmDepth(points[5], points[17])
 
     @staticmethod
     def similarity(v1, v2):
