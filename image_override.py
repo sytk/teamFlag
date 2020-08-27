@@ -8,7 +8,9 @@ class ImageOverwriter():
 
     def addImage(self, path):
         img = cv2.imread(path,cv2.IMREAD_UNCHANGED)
-        img = cv2.resize(img, (int(img.shape[1]/4), int(img.shape[0]/4)))
+
+        scale = 250 / img.shape[1]
+        img = cv2.resize(img, (int(img.shape[1]*scale), int(img.shape[0]*scale)))
 
         dict = {"path":path, "org_img":img, "img":img, "scale":1, "state":1, "pos":(None,None)}
         self.image_list.append(dict)
