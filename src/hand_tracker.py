@@ -2,10 +2,9 @@ import csv
 import cv2
 import numpy as np
 import tensorflow as tf
-
-from src.non_maximum_suppression import non_max_suppression_fast
 import warnings
 warnings.simplefilter('ignore')
+
 class HandTracker():
     r"""
     Class to use Google's Mediapipe HandTracking pipeline from Python.
@@ -26,7 +25,6 @@ class HandTracker():
 
     def __init__(self, palm_model, joint_model, anchors_path,
                 box_enlarge=1.5, box_shift=0.2):
-        self.count = 0;
         self.box_shift = box_shift
         self.box_enlarge = box_enlarge
 
@@ -121,44 +119,27 @@ class HandTracker():
         self.interp_palm.set_tensor(self.in_idx, img_norm[None])
         self.interp_palm.invoke()
 
-        """
-        out_reg shape is [number of anchors, 18]
-        Second dimension 0 - 4 are bounding box offset, width and height: dx, dy, w ,h
-        Second dimension 4 - 18 are 7 hand keypoint x and y coordinates: x1,y1,x2,y2,...x7,y7
-        """
         out_reg = self.interp_palm.get_tensor(self.out_reg_idx)[0]
-        """
-        out_clf shape is [number of anchors]
-        it is the classification score if there is a hand for each anchor box
-        """
         out_clf = self.interp_palm.get_tensor(self.out_clf_idx)[0,:,0]
 
         # finding the best prediction
-        probabilities = self._sigm(out_clf)
-        detecion_mask = probabilities > 0.5
+        # TODO: replace it with non-max suppression
+        detecion_mask = self._sigm(out_clf) > 0.7
         candidate_detect = out_reg[detecion_mask]
         candidate_anchors = self.anchors[detecion_mask]
-        probabilities = probabilities[detecion_mask]
 
         if candidate_detect.shape[0] == 0:
             # print("No hands found")
-            return None, None, None
-
-        # Pick the best bounding box with non maximum suppression
-        # the boxes must be moved by the corresponding anchor first
-        moved_candidate_detect = candidate_detect.copy()
-        moved_candidate_detect[:, :2] = candidate_detect[:, :2] + (candidate_anchors[:, :2] * 256)
-        box_ids = non_max_suppression_fast(moved_candidate_detect[:, :4], probabilities)
-
-        # Pick the first detected hand. Could be adapted for multi hand recognition
-        box_ids = box_ids[0]
+            return None, None
+        # picking the widest suggestion while NMS is not implemented
+        max_idx = np.argmax(candidate_detect[:, 3])
 
         # bounding box offsets, width and height
-        dx,dy,w,h = candidate_detect[box_ids, :4]
-        center_wo_offst = candidate_anchors[box_ids,:2] * 256
+        dx,dy,w,h = candidate_detect[max_idx, :4]
+        center_wo_offst = candidate_anchors[max_idx,:2] * 256
 
         # 7 initial keypoints
-        keypoints = center_wo_offst + candidate_detect[box_ids,4:].reshape(-1,2)
+        keypoints = center_wo_offst + candidate_detect[max_idx,4:].reshape(-1,2)
         side = max(w,h) * self.box_enlarge
 
         # now we need to move and rotate the detected hand for it to occupy a
@@ -168,14 +149,7 @@ class HandTracker():
         # TODO: replace triangle with the bbox directly
         source = self._get_triangle(keypoints[0], keypoints[2], side)
         source -= (keypoints[0] - keypoints[2]) * self.box_shift
-
-        debug_info = {
-            "detection_candidates": candidate_detect,
-            "anchor_candidates": candidate_anchors,
-            "selected_box_id": box_ids,
-        }
-
-        return source, keypoints, debug_info
+        return source, keypoints
 
     def preprocess_img(self, img):
         # fit the image into a 256x256 square
@@ -195,10 +169,9 @@ class HandTracker():
     def __call__(self, img):
         img_pad, img_norm, pad = self.preprocess_img(img)
 
-        source, keypoints, _ = self.detect_hand(img_norm)
+        source, keypoints = self.detect_hand(img_norm)
         if source is None:
             return None
-            # return None, None
 
         # calculating transformation from img_pad coords
         # to img_landmark coords (cropped hand image)
@@ -211,9 +184,6 @@ class HandTracker():
         img_landmark = cv2.warpAffine(
             self._im_normalize(img_pad), Mtr, (256,256)
         )
-
-        self.count += 1
-        cv2.imwrite('./pic/hand%d.jpg'%self.count, img_landmark*255)
 
         joints = self.predict_joints(img_landmark)
 

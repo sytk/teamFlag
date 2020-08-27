@@ -1,5 +1,5 @@
 import os
-from src.hand_tracker import HandTracker
+from src.hand_tracker__ import HandTracker
 import cv2
 import numpy as np
 import math
@@ -9,6 +9,20 @@ from sklearn.preprocessing import normalize
 import time
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+#        8   12  16  20
+#        |   |   |   |
+#        7   11  15  19
+#    4   |   |   |   |
+#    |   6   10  14  18
+#    3   |   |   |   |
+#    |   5---9---13--17
+#    2    \         /
+#     \    \       /
+#      1    \     /
+#       \    \   /
+#        ------0-
+
 
 class HandGesture():
 
@@ -175,9 +189,6 @@ class HandGesture():
     def __computePalmDepth(self, a, b):
         A = np.asarray(a)
         B = np.asarray(b)
-        # # print(A,B)
-        # print(np.cross(A,B))
-        # return 0.5 * np.linalg.norm(np.cross(A,B))
         return np.linalg.norm(A-B)
 
     @staticmethod
