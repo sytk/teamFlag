@@ -121,7 +121,8 @@ class HandGesture():
 
             palms = np.asarray([points[0], points[5],points[9],points[13], points[17]])
             self.palm_pos = palms.mean(axis=0)
-            cv2.circle(frame, (int(self.palm_pos[0]), int(self.palm_pos[1])), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
+            self.palm_pos = [int(p) for p in self.palm_pos]
+            cv2.circle(frame, (self.palm_pos[0], self.palm_pos[1]), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
             # out.write(frame)
             self.palm_depth = self.__computePalmDepth(points[5], points[17])
         else:
