@@ -1,3 +1,5 @@
+import queue
+
 import cv2
 
 
@@ -6,6 +8,7 @@ class ImageOverwriter():
     __gesture_list = {"curr": 1, "prev": 1}
     __is_grabbed = False
     __base_depth = 1
+    __hidden_image_index = queue.Queue()
 
     def __init__(self):
         pass
@@ -75,12 +78,19 @@ class ImageOverwriter():
         self.__is_grabbed = False
         self.__base_depth = 1.0
 
+    def showImage(self):
+        if self.__hidden_image_index.qsize() > 0:
+            index = self.__hidden_image_index.get()
+            self.image_list[index]["state"] = 1
+
+    def hideImage(self, num):
+        self.image_list[num]["state"] = 0
+        self.__hidden_image_index.put(num)
+
     def overwrite(self, frame):
         for image in self.image_list:
             if image["pos"][0] == None or image["pos"][1] == None:
                 image["state"] = 0
-            else:
-                image["state"] = 1
 
             if image["state"] == 1:
                 cutimage = image["img"]
