@@ -1,4 +1,5 @@
 import warnings
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import os
 import cv2
@@ -43,20 +44,20 @@ while hasFrame:
     executor.updateGesture(ges)
     gestures = executor.getGestures()
     if gestures["curr"] == "first":
-        executor.updateState("None")
+        executor.updateState("none", depth)
     elif gestures["curr"] == "palm_opened":
         if gestures["prev"] == "first" or executor.getState() == "grip":
             overlapped_images = writer.checkOverlap((int(palm[0]), int(palm[1])))
             if len(overlapped_images) > 0:
+                executor.updateState("grip", depth)
                 writer.setPosition(overlapped_images[0], int(palm[0]), int(palm[1]))
-                executor.updateState("grip")
+                writer.changeScale(overlapped_images[0], executor.getImageSizeRatio())
             else:
-                executor.updateState("None")
-
+                executor.updateState("none", depth)
 
     frame = writer.overwrite(frame)
 
-    print(writer.checkOverlap( (int(palm[0]), int(palm[1])) ))
+    print(writer.checkOverlap((int(palm[0]), int(palm[1]))))
     # print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
