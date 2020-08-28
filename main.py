@@ -46,7 +46,7 @@ while hasFrame:
     if ges == 1:
         writer.releaseImage()
     elif ges == 4:
-        writer.showImage()
+        writer.showImage(int(palm[0]), int(palm[1]))
         writer.releaseImage()
     elif ges == 6:
         if len(overlapped_images) > 0:

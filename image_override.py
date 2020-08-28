@@ -78,10 +78,11 @@ class ImageOverwriter():
         self.__is_grabbed = False
         self.__base_depth = 1.0
 
-    def showImage(self):
+    def showImage(self, x, y):
         if self.__hidden_image_index.qsize() > 0:
             index = self.__hidden_image_index.get()
             self.image_list[index]["state"] = 1
+            self.image_list[index]["pos"] = (x, y)
 
     def hideImage(self, num):
         self.image_list[num]["state"] = 0
