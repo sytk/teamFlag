@@ -63,6 +63,7 @@ class HandGesture():
         self.model.load_state_dict(last_state)
 
         self.model.eval() # モデルを推論モードに変更
+        self.lastLPF = 0
 
     def get_pose(self, kp,box):
         x0, y0 = 0,0
@@ -109,7 +110,6 @@ class HandGesture():
             else:
                 self.gesture = 0
 
-            #
             if points is not None:
                 for point in points:
                     x, y = point
@@ -122,6 +122,7 @@ class HandGesture():
             palms = np.asarray([points[0], points[5],points[9],points[13], points[17]])
             self.palm_pos = palms.mean(axis=0)
             self.palm_pos = [int(p) for p in self.palm_pos]
+
             cv2.circle(frame, (self.palm_pos[0], self.palm_pos[1]), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
             # out.write(frame)
             self.palm_depth = self.__computePalmDepth(points[5], points[17])
@@ -130,13 +131,19 @@ class HandGesture():
         return frame
 
     def getGesture(self):
-        return self.gesture;
+        return self.gesture
 
     def getPalmPos(self):
-        return self.palm_pos;
+        return self.palm_pos
 
     def getPalmDepth(self):
-        return self.palm_depth;
+        if self.lastLPF == 0:
+            self.lastLPF = self.palm_depth
+        k = 0.5
+        LPF = (1 - k) * self.lastLPF + k * self.palm_depth;
+        self.lastLPF = LPF;
+        return LPF
+
 
     def __computePalmDepth(self, a, b):
         A = np.asarray(a)

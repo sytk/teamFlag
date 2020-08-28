@@ -43,6 +43,7 @@ while hasFrame:
     writer.updateGesture(ges)
     prev_ges = writer.getPrevGesture()
     overlapped_images = writer.checkOverlap((int(palm[0]), int(palm[1])))
+
     if ges == 1:
         writer.releaseImage()
     elif ges == 4:
