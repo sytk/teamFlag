@@ -43,9 +43,9 @@ while hasFrame:
 
     executor.updateGesture(ges)
     gestures = executor.getGestures()
-    if gestures["curr"] == "first":
+    if gestures["curr"] == 0:
         executor.updateState("none", depth)
-    elif gestures["curr"] == "palm_opened":
+    elif gestures["curr"] == 5:
         if gestures["prev"] == "first" or executor.getState() == "grip":
             overlapped_images = writer.checkOverlap((int(palm[0]), int(palm[1])))
             if len(overlapped_images) > 0:
