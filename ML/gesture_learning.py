@@ -114,12 +114,12 @@ if __name__ == '__main__':
 
     batch_size = 256
     num_classes = 10
-    epochs = 3000
+    epochs = 100
 
     model = MyImageNetwork(num_classes).to(device)
-
-    if os.path.isfile('./last.pt'):  # 以前の学習結果が存在する場合
-        last_state = torch.load('./last.pt', map_location=device)  # データファイルの読み込み
+    path = './1'
+    if os.path.isfile(path+'/last.pt'):  # 以前の学習結果が存在する場合
+        last_state = torch.load(path+'/last.pt', map_location=device)  # データファイルの読み込み
 
         model.load_state_dict(last_state['state_dict'])  # 学習済ネットワーク変数の代入
         last_epoch = last_state['epoch']  #　引き続きのエポック数
@@ -148,10 +148,10 @@ if __name__ == '__main__':
         print('<TEST> ACC : {}'.format(test_acc))
 
     save_dict = {'state_dict': model.state_dict(), 'epoch': epochs+last_epoch, 'loss': train_loss}
-    torch.save(save_dict, './last.pt')
+    torch.save(save_dict, path+'/last.pt')
 
     import csv
-    with open('./log.csv', 'a+') as f:
+    with open(path+'/log.csv', 'a+') as f:
         writer = csv.writer(f, lineterminator='\n') # 改行コード（\n）を指定しておく
         f.seek(0) #読み込み位置を先頭に
         if len(f.read()) == 0: #先頭に凡例

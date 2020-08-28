@@ -36,11 +36,11 @@ while hasFrame:
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
 
-    if(ges=="palm_opened"):
-        writer.setPosition(0, int(palm[0]), int(palm[1]))
+    # if(ges=="palm_opened"):
+    #     writer.setPosition(0, int(palm[0]), int(palm[1]))
 
-    writer.setPosition(1, 200,200)
-    writer.setPosition(0, 300,300)
+    # writer.setPosition(1, 200,200)
+    # writer.setPosition(0, 300,300)
 
     frame = writer.overwrite(frame)
 
