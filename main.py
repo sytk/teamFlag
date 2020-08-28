@@ -36,10 +36,10 @@ while hasFrame:
     hasFrame, frame = capture.read()
     frame = cv2.flip(frame, 1)
 
-    if executor.submit(cv2.imshow, WINDOW, frame).done():
-        executor.submit(cv2.imshow, WINDOW, frame)
     if executor.submit(detector.updateGesture, frame).done():
         executor.submit(detector.updateGesture, frame)
+
+    cv2.imshow(WINDOW, frame)
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
@@ -49,7 +49,7 @@ while hasFrame:
     key = cv2.waitKey(1)
     if key == 27:
         break
-    print(1 / (time.time() - start))
+    # print(1 / (time.time() - start))
 
 capture.release()
 executor.shutdown()
