@@ -88,33 +88,36 @@ class HandGesture():
 
             pose = torch.from_numpy(np.asarray(kp))
             pose = torch.unsqueeze(pose,0)
-            print(pose.size())
+            # print(pose.size())
             pose = pose.to(self.device, dtype=torch.float)
             with torch.no_grad(): # 推論時には勾配は不要
                 outputs = self.model(pose) # 順伝播の計算
                 prob, predicted = torch.max(outputs.data, 1) # 確率が最大のラベルを取得
-                print(prob, predicted)
+                # print(prob, predicted)
 
             # res = self.tree.get_n_nearest_neighbors(kp,1)[0]
             # a = np.mean(res[1])
             # # print(res[0],np.where(idx_m == a)[0][0])
             # idx = np.where(self.idx_m == a)[0][0]
             # # print(self.indexes[idx])
-            # self.gesture = self.indexes[idx]
+            self.gesture = np.asarray(predicted)[0]
 
             if prob > 0.6:
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 cv2.putText(frame,str(predicted),(20,100), font, 2,(255,0,0),2,cv2.LINE_AA)
                 cv2.putText(frame, str(prob),(20,30), font, 1,(255,0,0),2,cv2.LINE_AA)
+            else:
+                self.gesture = 0
+
             #
-            # if points is not None:
-            #     for point in points:
-            #         x, y = point
-            #         cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
-            #     for connection in self.connections:
-            #         x0, y0 = points[connection[0]]
-            #         x1, y1 = points[connection[1]]
-            #         cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
+            if points is not None:
+                for point in points:
+                    x, y = point
+                    cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
+                for connection in self.connections:
+                    x0, y0 = points[connection[0]]
+                    x1, y1 = points[connection[1]]
+                    cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
 
             palms = np.asarray([points[0], points[5],points[9],points[13], points[17]])
             self.palm_pos = palms.mean(axis=0)

@@ -36,8 +36,8 @@ while hasFrame:
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
 
-    # if(ges=="palm_opened"):
-    #     writer.setPosition(0, int(palm[0]), int(palm[1]))
+    if(ges == 5):
+        writer.setPosition(0, int(palm[0]), int(palm[1]))
 
     # writer.setPosition(1, 200,200)
     # writer.setPosition(0, 300,300)
@@ -45,7 +45,7 @@ while hasFrame:
     frame = writer.overwrite(frame)
 
     print(writer.checkOverlap( (int(palm[0]), int(palm[1])) ))
-    # print(ges, palm, depth)
+    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
