@@ -1,8 +1,14 @@
+import queue
+
 import cv2
 
 
 class ImageOverwriter():
     image_list = []
+    __gesture_list = {"curr": 1, "prev": 1}
+    __is_grabbed = False
+    __base_depth = 1
+    __hidden_image_index = queue.Queue()
 
     def __init__(self):
         pass
@@ -47,17 +53,44 @@ class ImageOverwriter():
     def setPosition(self, num, x, y):
         self.image_list[num]["pos"] = (x, y)
 
-    def changeScale(self, num, scale):
+    def updateGesture(self, gesture):
+        self.__gesture_list["prev"] = self.__gesture_list["curr"]
+        self.__gesture_list["curr"] = gesture
+
+    def getPrevGesture(self):
+        return self.__gesture_list["prev"]
+
+    def isGrab(self):
+        return self.__is_grabbed
+
+    def grabImage(self, num, depth):
+        self.__is_grabbed = True
+
+        if self.__base_depth == 1.0:
+            self.__base_depth = depth
+        scale = depth / self.__base_depth
+
         image = self.image_list[num]["org_img"]
         self.image_list[num]["scale"] = scale
         self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * self.image_list[num]["scale"]), int(image.shape[0] * self.image_list[num]["scale"])))
+
+    def releaseImage(self):
+        self.__is_grabbed = False
+        self.__base_depth = 1.0
+
+    def showImage(self):
+        if self.__hidden_image_index.qsize() > 0:
+            index = self.__hidden_image_index.get()
+            self.image_list[index]["state"] = 1
+
+    def hideImage(self, num):
+        self.image_list[num]["state"] = 0
+        self.__hidden_image_index.put(num)
 
     def overwrite(self, frame):
         for image in self.image_list:
             if image["pos"][0] == None or image["pos"][1] == None:
                 image["state"] = 0
-            else:
-                image["state"] = 1
 
             if image["state"] == 1:
                 cutimage = image["img"]
