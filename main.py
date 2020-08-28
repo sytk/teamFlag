@@ -7,7 +7,9 @@ import numpy as np
 import time
 from hand_ges import HandGesture
 from image_override import ImageOverwriter
-
+import concurrent.futures
+import copy
+import time
 WINDOW = "Hand Tracking"
 
 cv2.namedWindow(WINDOW)
@@ -28,17 +30,35 @@ writer.addImage("./dog.jpeg")
 writer.setPosition(0, 300, 300)
 writer.setPosition(1, 200, 200)
 
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+finished = {"window": False, "gesture": False}
+
+start = 0
 while hasFrame:
-    start = time.time()
+    # start = time.time()
 
     hasFrame, frame = capture.read()
     frame = cv2.flip(frame, 1)
+    _frame = copy.copy(frame)
+    # frame = detector.updateGesture(frame)
 
-    frame = detector.updateGesture(frame)
+    # print(executor.submit(detector.updateGesture, _frame).done())
+    # if executor.submit(detector.updateGesture, _frame).done():
+    #     # print(1 / (time.time() - start))
+    #     # print("a")
+    #     # executor.submit(detector.updateGesture, _frame)
+    #     # start = time.time()
+    #     pass
+
+    executor.submit(detector.updateGesture, _frame)
+
     ges = detector.getGesture()
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
-    print(ges)
+    # if len(detector.frame) != 0:
+    #     frame = detector.frame
+
+    cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
     writer.updateGesture(ges)
     prev_ges = writer.getPrevGesture()
@@ -66,15 +86,16 @@ while hasFrame:
 
     frame = writer.overwrite(frame)
 
-    print(writer.checkOverlap((int(palm[0]), int(palm[1]))))
+    # print(writer.checkOverlap((int(palm[0]), int(palm[1]))))
     # print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
     if key == 27:
         break
-    print(1 / (time.time() - start))
+    # print(1 / (time.time() - start))
 
 capture.release()
+executor.shutdown()
 # out.release()
 cv2.destroyAllWindows()

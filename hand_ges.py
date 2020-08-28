@@ -29,7 +29,7 @@ import numpy as np
 
 
 class HandGesture():
-
+    frame = []
     def __init__(self):
         self.palm_model_path = "./models/palm_detection_without_custom_op.tflite"
         self.landmark_model_path = "./models/hand_landmark.tflite"
@@ -128,6 +128,7 @@ class HandGesture():
             self.palm_depth = self.__computePalmDepth(points[5], points[17])
         else:
             self.gesture = "None"
+        self.frame = frame
         return frame
 
     def getGesture(self):

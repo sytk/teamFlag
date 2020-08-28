@@ -67,7 +67,7 @@ class ImageOverwriter():
         scale = self.image_list[num]["scale"]
         if not self.__is_grabbed:
             self.__base_depth = depth / scale
-        print(self.__base_depth)
+            
         image = self.image_list[num]["org_img"]
         self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
         self.image_list[num]["scale"] = depth / self.__base_depth
