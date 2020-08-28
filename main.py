@@ -53,11 +53,10 @@ while hasFrame:
             else:
                 executor.updateState("None")
 
-
     frame = writer.overwrite(frame)
 
     print(writer.checkOverlap( (int(palm[0]), int(palm[1])) ))
-    # print(ges, palm, depth)
+    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
