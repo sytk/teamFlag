@@ -6,6 +6,7 @@ import numpy as np
 import time
 from hand_ges import HandGesture
 from image_override import ImageOverwriter
+from gesture_action import GestureActionExecutor
 
 WINDOW = "Hand Tracking"
 
@@ -24,7 +25,10 @@ detector = HandGesture()
 writer = ImageOverwriter()
 writer.addImage("./dog.jpeg")
 writer.addImage("./dog.jpeg")
+writer.setPosition(0, 300, 300)
+writer.setPosition(1, 200, 200)
 
+executor = GestureActionExecutor()
 while hasFrame:
     start = time.time()
 
@@ -36,11 +40,19 @@ while hasFrame:
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
 
-    if(ges=="palm_opened"):
-        writer.setPosition(0, int(palm[0]), int(palm[1]))
+    executor.updateGesture(ges)
+    gestures = executor.getGestures()
+    if gestures["curr"] == "first":
+        executor.updateState("None")
+    elif gestures["curr"] == "palm_opened":
+        if gestures["prev"] == "first" or executor.getState() == "grip":
+            overlapped_images = writer.checkOverlap((int(palm[0]), int(palm[1])))
+            if len(overlapped_images) > 0:
+                writer.setPosition(overlapped_images[0], int(palm[0]), int(palm[1]))
+                executor.updateState("grip")
+            else:
+                executor.updateState("None")
 
-    writer.setPosition(1, 200,200)
-    writer.setPosition(0, 300,300)
 
     frame = writer.overwrite(frame)
 
