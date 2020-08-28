@@ -3,6 +3,9 @@ import cv2
 
 class ImageOverwriter():
     image_list = []
+    __gesture_list = {"curr": 1, "prev": 1}
+    __is_grabbed = False
+    __base_depth = 1
 
     def __init__(self):
         pass
@@ -47,10 +50,30 @@ class ImageOverwriter():
     def setPosition(self, num, x, y):
         self.image_list[num]["pos"] = (x, y)
 
-    def changeScale(self, num, scale):
+    def updateGesture(self, gesture):
+        self.__gesture_list["prev"] = self.__gesture_list["curr"]
+        self.__gesture_list["curr"] = gesture
+
+    def getPrevGesture(self):
+        return self.__gesture_list["prev"]
+
+    def isGrab(self):
+        return self.__is_grabbed
+
+    def grabImage(self, num, depth):
+        self.__is_grabbed = True
+
+        if self.__base_depth == 1.0:
+            self.__base_depth = depth
+        scale = depth / self.__base_depth
+
         image = self.image_list[num]["org_img"]
         self.image_list[num]["scale"] = scale
         self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * self.image_list[num]["scale"]), int(image.shape[0] * self.image_list[num]["scale"])))
+
+    def releaseImage(self):
+        self.__is_grabbed = False
+        self.__base_depth = 1.0
 
     def overwrite(self, frame):
         for image in self.image_list:
