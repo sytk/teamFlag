@@ -64,15 +64,15 @@ class ImageOverwriter():
         return self.__is_grabbed
 
     def grabImage(self, num, depth):
-        self.__is_grabbed = True
-
-        if self.__base_depth == 1.0:
-            self.__base_depth = depth
-        scale = depth / self.__base_depth
+        scale = self.image_list[num]["scale"]
+        if not self.__is_grabbed:
+            self.__base_depth = depth / scale
 
         image = self.image_list[num]["org_img"]
-        self.image_list[num]["scale"] = scale
-        self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * self.image_list[num]["scale"]), int(image.shape[0] * self.image_list[num]["scale"])))
+        self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
+        self.image_list[num]["scale"] = depth / self.__base_depth
+
+        self.__is_grabbed = True
 
     def releaseImage(self):
         self.__is_grabbed = False
