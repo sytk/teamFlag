@@ -44,15 +44,18 @@ while hasFrame:
     prev_ges = writer.getPrevGesture()
     overlapped_images = writer.checkOverlap((int(palm[0]), int(palm[1])))
 
-    if ges == 1:
+    if ges != 5:
         writer.releaseImage()
-    elif ges == 4:
+
+    if ges == 4:
         writer.showImage(int(palm[0]), int(palm[1]))
         writer.releaseImage()
-    elif ges == 6:
+
+    if ges == 6:
         if len(overlapped_images) > 0:
             writer.hideImage(overlapped_images[0])
         writer.releaseImage()
+
     elif ges == 5:
         if prev_ges != 5 or writer.isGrab():
             if len(overlapped_images) > 0:
