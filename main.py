@@ -7,6 +7,7 @@ import numpy as np
 import time
 from hand_ges import HandGesture
 from image_override import ImageOverwriter
+from pdf_controller import PdfController
 
 WINDOW = "Hand Tracking"
 
@@ -27,6 +28,9 @@ writer.addImage("./dog.jpeg")
 writer.addImage("./dog.jpeg")
 writer.setPosition(0, (300, 300))
 writer.setPosition(1, (200, 200))
+
+pc = PdfController()
+pdf = pc.convertToImage("IoTLT.pdf")
 
 while hasFrame:
     start = time.time()
