@@ -50,8 +50,8 @@ class ImageOverwriter():
             # return i
         return list
 
-    def setPosition(self, num, x, y):
-        self.image_list[num]["pos"] = (x, y)
+    def setPosition(self, num, pos):
+        self.image_list[num]["pos"] = (pos[0], pos[1])
 
     def updateGesture(self, gesture):
         self.__gesture_list["prev"] = self.__gesture_list["curr"]
@@ -67,7 +67,7 @@ class ImageOverwriter():
         scale = self.image_list[num]["scale"]
         if not self.__is_grabbed:
             self.__base_depth = depth / scale
-        print(self.__base_depth)
+
         image = self.image_list[num]["org_img"]
         self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
         self.image_list[num]["scale"] = depth / self.__base_depth
@@ -78,17 +78,36 @@ class ImageOverwriter():
         self.__is_grabbed = False
         self.__base_depth = 1.0
 
-    def showImage(self, x, y):
+    def showImage(self, pos):
         if self.__hidden_image_index.qsize() > 0:
             index = self.__hidden_image_index.get()
             self.image_list[index]["state"] = 1
-            self.image_list[index]["pos"] = (x, y)
+            self.image_list[index]["pos"] = (pos[0], pos[1])
 
     def hideImage(self, num):
         self.image_list[num]["state"] = 0
         self.__hidden_image_index.put(num)
 
-    def overwrite(self, frame):
+    def overwrite(self, frame, ges, palm, depth):
+        self.updateGesture(ges)
+        overlapped_images = self.checkOverlap(palm)
+
+        if ges != 5:
+            self.releaseImage()
+        if ges == 4:
+            self.showImage(palm)
+        if ges == 5:
+            prev_ges = self.__gesture_list["prev"]
+            if prev_ges != 5 or self.isGrab():
+                if len(overlapped_images) > 0:
+                    self.grabImage(overlapped_images[0], depth)
+                    self.setPosition(overlapped_images[0], palm)
+            else:
+                self.releaseImage()
+        if ges == 6:
+            if len(overlapped_images) > 0:
+                self.hideImage(overlapped_images[0])
+
         for image in self.image_list:
             if image["pos"][0] == None or image["pos"][1] == None:
                 image["state"] = 0
