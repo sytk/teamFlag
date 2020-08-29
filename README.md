@@ -10,6 +10,14 @@
 $ python main.py
 ```
 
+### 3. pdfの読み込み
+- 画像の代わりにpdfを読み込む際に必要なもの
+  - Pythonモジュール
+    - pdf2image
+    - pillow
+  - poppler
+    - プロジェクトのルート直下にダウンロードしたpopplerフォルダを配置
+
 ### requirement
 - tensorflow 1.14.0
 - opencv 4.4.0.42
