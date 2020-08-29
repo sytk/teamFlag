@@ -25,12 +25,15 @@ detector = HandGesture()
 
 writer = ImageOverwriter()
 writer.addImage("./dog.jpeg")
-writer.addImage("./dog.jpeg")
 writer.setPosition(0, (300, 300))
+writer.addImage("./dog.jpeg")
 writer.setPosition(1, (200, 200))
 
-pc = PdfController()
-pdf = pc.convertToImage("IoTLT.pdf")
+# pc = PdfController()
+# pdf = pc.convertToImage("IoTLT.pdf")
+# for i, image in enumerate(pdf):
+#     writer.addImage(image)
+#     writer.setPositionOutScreen(i)
 
 while hasFrame:
     start = time.time()

@@ -18,7 +18,7 @@ class ImageOverwriter():
         scale = 250 / img.shape[1]
         img = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
 
-        dict = {"path": path, "org_img": img, "img": img, "scale": 1.0, "state": 1, "pos": (None, None)}
+        dict = {"path": path, "org_img": img, "img": img, "scale": 1.0, "state": 1, "pos": (None, None), "out_screen": 0}
         self.image_list.append(dict)
 
     def checkOverlap(self, pos):
@@ -50,6 +50,10 @@ class ImageOverwriter():
 
     def setPosition(self, num, pos):
         self.image_list[num]["pos"] = (pos[0], pos[1])
+
+    def setPositionOutScreen(self, num):
+        width = self.image_list[num]["org_img"].shape[1]
+        self.setPosition(num, (-width, 0))
 
     def updateGesture(self, gesture):
         self.__gesture_list["prev"] = self.__gesture_list["curr"]
@@ -86,6 +90,13 @@ class ImageOverwriter():
         self.image_list[num]["state"] = 0
         self.__hidden_image_index.append(num)
 
+    def pullImage(self, pos):
+        for i, image in enumerate(self.image_list):
+            if image["out_screen"] == 1:
+                self.setPosition(i, pos)
+                image["out_screen"] = 0
+                break
+
     def overwrite(self, frame, ges, palm, depth):
         self.updateGesture(ges)
         overlapped_images = self.checkOverlap(palm)
@@ -105,10 +116,17 @@ class ImageOverwriter():
         if ges == 6:
             if len(overlapped_images) > 0:
                 self.hideImage(overlapped_images[0])
+        if ges == 7:
+            prev_ges = self.__gesture_list["prev"]
+            if prev_ges != 7:
+                self.pullImage(palm)
 
         for image in self.image_list:
             if image["pos"][0] == None or image["pos"][1] == None:
                 image["state"] = 0
+            elif image["pos"][0] < 0 or image["pos"][1] < 0:
+                image["out_screen"] = 1
+                continue
 
             if image["state"] == 1:
                 cutimage = image["img"]
@@ -172,6 +190,7 @@ class ImageOverwriter():
                         # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
                         frame[dpty - int(imgheight / 2) + upoutsideimg:dpty - int(imgheight / 2) + imgheight - downoutsideimg, dptx - int(imgwidth / 2) + leftoutsideimg:dptx - int(imgwidth / 2) + imgwidth - rightoutsideimg] = cutimg
                     except ValueError:
+                        image["out_screen"] = 1
                         continue
 
                 # 　外にはみ出る物がない時
