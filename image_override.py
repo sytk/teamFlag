@@ -164,16 +164,15 @@ class ImageOverwriter():
 
                 # はみ出ているフラグが立ってたら
                 if (outsideflag == 1):
-                    # 上記の結果から画像を切り取り
-                    cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
-                    # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
-                    # カットした写真を合成
-                    # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-
-                    frame[
-                    dpty - int(imgheight / 2) + upoutsideimg:dpty - int(imgheight / 2) + imgheight - downoutsideimg,
-                    dptx - int(imgwidth / 2) + leftoutsideimg:dptx - int(
-                        imgwidth / 2) + imgwidth - rightoutsideimg] = cutimg
+                    try:
+                        # 上記の結果から画像を切り取り
+                        # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
+                        cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
+                        # カットした写真を合成
+                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                        frame[dpty - int(imgheight / 2) + upoutsideimg:dpty - int(imgheight / 2) + imgheight - downoutsideimg, dptx - int(imgwidth / 2) + leftoutsideimg:dptx - int(imgwidth / 2) + imgwidth - rightoutsideimg] = cutimg
+                    except ValueError:
+                        continue
 
                 # 　外にはみ出る物がない時
                 else:
