@@ -61,7 +61,7 @@ while hasFrame:
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    print(ges, palm, depth)
+    # print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)

@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import warnings
 warnings.simplefilter('ignore')
+import time
 
 class HandTracker():
     r"""
@@ -168,7 +169,6 @@ class HandTracker():
 
     def __call__(self, img):
         img_pad, img_norm, pad = self.preprocess_img(img)
-
         source, keypoints = self.detect_hand(img_norm)
         if source is None:
             return None
@@ -185,7 +185,9 @@ class HandTracker():
             self._im_normalize(img_pad), Mtr, (256,256)
         )
 
+        # start = time.time()
         joints = self.predict_joints(img_landmark)
+        # print(time.time()-start)
 
         # adding the [0,0,1] row to make the matrix square
         Mtr = self._pad1(Mtr.T).T

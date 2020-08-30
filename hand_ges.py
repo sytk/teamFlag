@@ -64,6 +64,7 @@ class HandGesture():
 
         self.model.eval() # モデルを推論モードに変更
         self.lastLPF = 0
+        self.last_palm_pos = [0,0]
 
         self.pre_ges = []
         self.return_ges = 0
@@ -84,7 +85,9 @@ class HandGesture():
         scale = 0.5
         img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
 
+        # start = time.time()
         hand = self.detector(img_)
+        # print(time.time()-start)
 
         if hand is not None :#and len(hand) > 0:
             points = hand['joints']
@@ -137,7 +140,7 @@ class HandGesture():
         if len(self.pre_ges) == 3:
             self.pre_ges.pop(0)
         self.pre_ges.append(self.gesture)
-        print(self.pre_ges.count(self.gesture))
+        # print(self.pre_ges.count(self.gesture))
         if self.pre_ges.count(self.gesture) == 3:
             self.return_ges = self.gesture
             return self.return_ges
@@ -145,16 +148,24 @@ class HandGesture():
             return self.return_ges
 
     def getPalmPos(self):
-        return self.palm_pos
+        if self.last_palm_pos == [0,0]:
+            self.last_palm_pos = self.palm_pos
+        k = 0.2
+        LPF = []
+        for pre, curr in zip(self.last_palm_pos, self.palm_pos):
+            LPF.append( (1 - k) * pre + k * curr)
+        self.last_palm_pos = LPF;
+        return [int(p) for p in LPF]
+        # return self.palm_pos
 
     def getPalmDepth(self):
-        # if self.lastLPF == 0:
-        #     self.lastLPF = self.palm_depth
-        # k = 0.5
-        # LPF = (1 - k) * self.lastLPF + k * self.palm_depth;
-        # self.lastLPF = LPF;
-        # return LPF
-        return self.palm_depth
+        if self.lastLPF == 0:
+            self.lastLPF = self.palm_depth
+        k = 0.2
+        LPF = (1 - k) * self.lastLPF + k * self.palm_depth;
+        self.lastLPF = LPF;
+        return LPF
+        # return self.palm_depth
 
 
     def __computePalmDepth(self, a, b):
