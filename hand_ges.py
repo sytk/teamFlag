@@ -78,7 +78,10 @@ class HandGesture():
 
     def updateGesture(self, frame):
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        hand = self.detector(img)
+        scale = 0.5
+        img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
+
+        hand = self.detector(img_)
 
         if hand is not None :#and len(hand) > 0:
             points = hand['joints']
@@ -111,6 +114,7 @@ class HandGesture():
                 self.gesture = 0
 
             if points is not None:
+                points = [point/scale for point in points]
                 for point in points:
                     x, y = point
                     cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
