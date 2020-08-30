@@ -42,31 +42,33 @@ finished = {"window": False, "gesture": False}
 
 start = 0
 while hasFrame:
-    # start = time.time()
+    start = time.time()
 
     hasFrame, frame = capture.read()
     frame = cv2.flip(frame, 1)
-    _frame = copy.copy(frame)
 
-    executor.submit(detector.updateGesture, _frame)
+    #普通に処理するとき
+    frame = detector.updateGesture(frame)
+
+    #並列処理にするとき
+    # _frame = copy.copy(frame)
+    # executor.submit(detector.updateGesture, _frame)
+
     ges = detector.getGesture()
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
-    # if len(detector.frame) != 0:
-    #     frame = detector.frame
 
-    # cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
+    cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    # print(writer.checkOverlap((int(palm[0]), int(palm[1]))))
-    # print(ges, palm, depth)
+    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
     if key == 27:
         break
-    # print(1 / (time.time() - start))
+    print(1 / (time.time() - start))
 
 capture.release()
 executor.shutdown()
