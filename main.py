@@ -34,7 +34,7 @@ writer = ImageOverwriter()
 pc = PdfController()
 pdf = pc.convertToImage("IoTLT.pdf")
 writer.addImages(pdf)
-writer.setPosition(0, (300, 300))
+writer.setPosition(0, None)
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 finished = {"window": False, "gesture": False}

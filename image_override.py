@@ -63,13 +63,9 @@ class ImageOverwriter:
         if pos is not None:
             self.image_list[num]["pos"] = (pos[0], pos[1])
         else:
-            if type(self.image_list[num]["org_img"]) is list:
-                index = self.image_list[num]["index"]
-                width = self.image_list[num]["org_img"][index].shape[1]
-            else:
-                width = self.image_list[num]["org_img"].shape[1]
-
-            self.image_list[num]["pos"] = (-width, 0)
+            width = self.image_list[num]["img"].shape[1]
+            height = self.image_list[num]["img"].shape[0]
+            self.image_list[num]["pos"] = (width // 2, height // 2 * (num + 1))
 
     def updateGesture(self, gesture):
         self.__gesture_list["prev"] = self.__gesture_list["curr"]
@@ -83,18 +79,17 @@ class ImageOverwriter:
 
     def changePage(self, num, direction):
         if type(self.image_list[num]["org_img"]) is list:
+            index = self.image_list[num]["index"]
             if direction == "prev":
-                index = self.image_list[num]["index"] - 1
+                index -= 1
                 if index < 0:
                     index = len(self.image_list[num]["org_img"]) - 1
-                self.image_list[num]["index"] = index
-                self.image_list[num]["img"] = self.image_list[num]["org_img"][index]
             elif direction == "next":
-                index = self.image_list[num]["index"] + 1
+                index += 1
                 if index >= len(self.image_list[num]["org_img"]):
                     index = 0
-                self.image_list[num]["index"] = index
-                self.image_list[num]["img"] = self.image_list[num]["org_img"][index]
+            self.image_list[num]["index"] = index
+            self.image_list[num]["img"] = self.image_list[num]["org_img"][index]
 
     def grabImage(self, num, depth):
         scale = self.image_list[num]["scale"]
