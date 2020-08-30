@@ -1,9 +1,9 @@
 import cv2
 
 
-class ImageOverwriter():
+class ImageOverwriter:
     image_list = []
-    __gesture_list = {"curr": 1, "prev": 1}
+    __gesture_list = {"curr": 0, "prev": 0}
     __grab_image_num = None
     __base_depth = 1
     __hidden_image_index = []
@@ -11,7 +11,6 @@ class ImageOverwriter():
 
     def __init__(self):
         pass
-        # self.image_list = []
 
     def addImage(self, path):
         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
@@ -19,7 +18,8 @@ class ImageOverwriter():
         scale = 250 / img.shape[1]
         img = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
 
-        dict = {"path": path, "org_img": img, "img": img, "scale": 1.0, "state": 1, "pos": (None, None), "out_screen": 0}
+        dict = {"path": path, "org_img": img, "img": img, "scale": 1.0, "visible": True, "pos": (None, None),
+                "out_screen": False}
         self.image_list.append(dict)
 
     def checkOverlap(self, pos):
@@ -27,11 +27,11 @@ class ImageOverwriter():
         for i, dict in enumerate(self.image_list):
             x, y = dict["pos"][0], dict["pos"][1]
 
-            if x == None or y == None:
+            if x is None or y is None:
                 continue
 
-            half_w = int(dict["img"].shape[1] / 2)
-            half_h = int(dict["img"].shape[0] / 2)
+            half_w = dict["img"].shape[1] // 2
+            half_h = dict["img"].shape[0] // 2
 
             left_top = (x - half_w, y - half_h)
             right_bottom = (x + half_w, y + half_h)
@@ -46,15 +46,14 @@ class ImageOverwriter():
                 continue
 
             list.append(i)  # pos is in img
-            # return i
         return list
 
     def setPosition(self, num, pos):
-        self.image_list[num]["pos"] = (pos[0], pos[1])
-
-    def setPositionOutScreen(self, num):
-        width = self.image_list[num]["org_img"].shape[1]
-        self.setPosition(num, (-width, 0))
+        if pos is not None:
+            self.image_list[num]["pos"] = (pos[0], pos[1])
+        else:
+            width = self.image_list[num]["org_img"].shape[1]
+            self.image_list[num]["pos"] = (-width, 0)
 
     def updateGesture(self, gesture):
         self.__gesture_list["prev"] = self.__gesture_list["curr"]
@@ -74,7 +73,6 @@ class ImageOverwriter():
         image = self.image_list[num]["org_img"]
         self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
         self.image_list[num]["scale"] = depth / self.__base_depth
-
         self.__grab_image_num = num
 
     def releaseImage(self):
@@ -84,18 +82,18 @@ class ImageOverwriter():
     def showImage(self, pos):
         if len(self.__hidden_image_index) > 0:
             index = self.__hidden_image_index.pop()
-            self.image_list[index]["state"] = 1
+            self.image_list[index]["visible"] = True
             self.image_list[index]["pos"] = (pos[0], pos[1])
 
     def hideImage(self, num):
-        self.image_list[num]["state"] = 0
+        self.image_list[num]["visible"] = False
         self.__hidden_image_index.append(num)
 
     def pullImage(self, pos):
         for i, image in enumerate(self.image_list):
-            if image["out_screen"] == 1:
+            if image["out_screen"]:
                 self.setPosition(i, pos)
-                image["out_screen"] = 0
+                image["out_screen"] = False
                 break
 
     def overwrite(self, frame, ges, palm, depth):
@@ -133,13 +131,13 @@ class ImageOverwriter():
             self.__stay_time = 0
 
         for image in self.image_list:
-            if image["pos"][0] == None or image["pos"][1] == None:
-                image["state"] = 0
+            if image["pos"][0] is None or image["pos"][1] is None:
+                image["visible"] = False
             elif image["pos"][0] < 0 or image["pos"][1] < 0:
-                image["out_screen"] = 1
+                image["out_screen"] = True
                 continue
 
-            if image["state"] == 1:
+            if image["visible"]:
                 cutimage = image["img"]
                 dptx = image["pos"][0]
                 dpty = image["pos"][1]
@@ -147,7 +145,7 @@ class ImageOverwriter():
                 width = frame.shape[1]
                 height = frame.shape[0]
 
-                outsideflag = 0  # はみ出ているかフラグ
+                outsideflag = True  # はみ出ているかフラグ
                 leftoutsideimg = 0  # 左側の画面外に出ている部分のサイズ
                 rightoutsideimg = 0
                 upoutsideimg = 0
@@ -162,52 +160,50 @@ class ImageOverwriter():
 
                 imgwidth = cutimage.shape[1]
                 imgheight = cutimage.shape[0]
-                # print(dptx,dpty)
 
                 # 左にはみ出てたら
-                if (dptx - int(imgwidth / 2) < 0):
-                    outsideflag = 1
-                    leftoutsideimg = int(imgwidth / 2) - dptx
-                    # print(leftoutsideimg)
+                if dptx - imgwidth // 2 < 0:
+                    outsideflag = True
+                    leftoutsideimg = imgwidth // 2 - dptx
                     cutimage3 = leftoutsideimg
 
                 # 右にはみ出てたら
-                if (width < dptx - int(imgwidth / 2) + imgwidth):
-                    outsideflag = 1
-                    rightoutsideimg = dptx - int(imgwidth / 2) + imgwidth - width
-                    # print(rightoutsideimg)
+                if width < dptx - imgwidth // 2 + imgwidth:
+                    outsideflag = True
+                    rightoutsideimg = dptx - imgwidth // 2 + imgwidth - width
                     cutimage4 = imgwidth - int(rightoutsideimg)
 
                 # 左にはみ出てたら
-                if (dpty - int(imgheight / 2) < 0):
-                    outsideflag = 1
-                    upoutsideimg = int(imgheight / 2) - dpty
-                    # print(upoutsideimg)
+                if dpty - imgheight // 2 < 0:
+                    outsideflag = True
+                    upoutsideimg = imgheight // 2 - dpty
                     cutimage1 = upoutsideimg
 
                 # 下にはみ出てたら
-                if (height < dpty - int(imgheight / 2) + imgheight):
-                    outsideflag = 1
-                    downoutsideimg = dpty - int(imgheight / 2) + imgheight - height
+                if height < dpty - imgheight // 2 + imgheight:
+                    outsideflag = True
+                    downoutsideimg = dpty - imgheight // 2 + imgheight - height
                     cutimage2 = imgheight - downoutsideimg
 
                 # はみ出ているフラグが立ってたら
-                if (outsideflag == 1):
+                if outsideflag:
                     try:
                         # 上記の結果から画像を切り取り
                         # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
                         cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
                         # カットした写真を合成
                         # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                        frame[dpty - int(imgheight / 2) + upoutsideimg:dpty - int(imgheight / 2) + imgheight - downoutsideimg, dptx - int(imgwidth / 2) + leftoutsideimg:dptx - int(imgwidth / 2) + imgwidth - rightoutsideimg] = cutimg
+                        frame[
+                        dpty - imgheight // 2 + upoutsideimg:dpty - imgheight // 2 + imgheight - downoutsideimg,
+                        dptx - imgwidth // 2 + leftoutsideimg:dptx - imgwidth // 2 + imgwidth - rightoutsideimg] = cutimg
                     except ValueError:
-                        image["out_screen"] = 1
+                        image["out_screen"] = True
                         continue
 
                 # 　外にはみ出る物がない時
                 else:
                     # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
                     # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                    frame[dpty - int(imgheight / 2):dpty - int(imgheight / 2) + imgheight,
-                    dptx - int(imgwidth / 2):dptx - int(imgwidth / 2) + imgwidth] = cutimage
+                    frame[dpty - imgheight // 2:dpty - imgheight // 2 + imgheight,
+                    dptx - imgwidth // 2:dptx - imgwidth // 2 + imgwidth] = cutimage
         return frame
