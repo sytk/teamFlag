@@ -30,7 +30,7 @@ class ImageOverwriter:
             scale = 250 / img.shape[1]
             img = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
             images.append(img)
-        dict = {"path": path_list, "org_img": images, "img": images, "index": 0, "scale": 1.0, "visible": True, "pos": (None, None), "out_screen": False}
+        dict = {"path": path_list, "org_img": images, "img": images[0], "index": 0, "scale": 1.0, "visible": True, "pos": (None, None), "out_screen": False}
         self.image_list.append(dict)
 
     def checkOverlap(self, pos):
@@ -41,15 +41,8 @@ class ImageOverwriter:
             if x is None or y is None:
                 continue
 
-            half_w = 0
-            half_h = 0
-            if type(dict["img"]) is list:
-                index = dict["index"]
-                half_w = dict["img"][index].shape[1] // 2
-                half_h = dict["img"][index].shape[0] // 2
-            else:
-                half_w = dict["img"].shape[1] // 2
-                half_h = dict["img"].shape[0] // 2
+            half_w = dict["img"].shape[1] // 2
+            half_h = dict["img"].shape[0] // 2
 
             left_top = (x - half_w, y - half_h)
             right_bottom = (x + half_w, y + half_h)
@@ -89,15 +82,19 @@ class ImageOverwriter:
         return self.__grab_image_num is not None
 
     def changePage(self, num, direction):
-        if type(self.image_list[num]["img"]) is list:
+        if type(self.image_list[num]["org_img"]) is list:
             if direction == "prev":
-                self.image_list[num]["index"] -= 1
-                if self.image_list[num]["index"] < 0:
-                    self.image_list[num]["index"] = len(self.image_list[num]["img"]) - 1
+                index = self.image_list[num]["index"] - 1
+                if index < 0:
+                    index = len(self.image_list[num]["org_img"]) - 1
+                self.image_list[num]["index"] = index
+                self.image_list[num]["img"] = self.image_list[num]["org_img"][index]
             elif direction == "next":
-                self.image_list[num]["index"] += 1
-                if self.image_list[num]["index"] >= len(self.image_list[num]["img"]):
-                    self.image_list[num]["index"] = 0
+                index = self.image_list[num]["index"] + 1
+                if index >= len(self.image_list[num]["org_img"]):
+                    index = 0
+                self.image_list[num]["index"] = index
+                self.image_list[num]["img"] = self.image_list[num]["org_img"][index]
 
     def grabImage(self, num, depth):
         scale = self.image_list[num]["scale"]
@@ -106,13 +103,11 @@ class ImageOverwriter:
 
         image = self.image_list[num]["org_img"]
         if type(image) is list:
-            # TODO: 画像のサイズが変わり続けるバグを直す
-            pass
-            # index = self.image_list[num]["index"]
-            # image = image[index]
-            # self.image_list[num]["img"][index] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
+            index = self.image_list[num]["index"]
+            self.image_list[num]["img"] = cv2.resize(image[index], (int(image[index].shape[1] * scale), int(image[index].shape[0] * scale)))
         else:
             self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
+
         self.image_list[num]["scale"] = depth / self.__base_depth
         self.__grab_image_num = num
 
@@ -188,9 +183,6 @@ class ImageOverwriter:
 
             if image["visible"]:
                 cutimage = image["img"]
-                if type(cutimage) is list:
-                    index = image["index"]
-                    cutimage = cutimage[index]
                 dptx = image["pos"][0]
                 dpty = image["pos"][1]
 

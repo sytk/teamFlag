@@ -36,12 +36,6 @@ pdf = pc.convertToImage("IoTLT.pdf")
 writer.addImages(pdf)
 writer.setPosition(0, (300, 300))
 
-# pc = PdfController()
-# pdf = pc.convertToImage("IoTLT.pdf")
-# for i, image in enumerate(pdf):
-#     writer.addImage(image)
-#     writer.setPositionOutScreen(i)
-
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 finished = {"window": False, "gesture": False}
 
