@@ -7,6 +7,7 @@ class ImageOverwriter():
     __is_grabbed = False
     __base_depth = 1
     __hidden_image_index = []
+    __stay_time = 0
 
     def __init__(self):
         pass
@@ -120,6 +121,13 @@ class ImageOverwriter():
             prev_ges = self.__gesture_list["prev"]
             if prev_ges != 7:
                 self.pullImage(palm)
+        elif 0 < palm[0] < 100:
+            self.__stay_time += 1
+            if self.__stay_time >= 5:
+                self.pullImage(palm)
+                self.__stay_time = 0
+        else:
+            self.__stay_time = 0
 
         for image in self.image_list:
             if image["pos"][0] == None or image["pos"][1] == None:
