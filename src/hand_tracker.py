@@ -200,7 +200,6 @@ class HandTracker():
         box_orig = self._target_box
         kp_orig -= pad[::-1]
         # box_orig -= pad[::-1]
-
         hand = {'joints': kp_orig, 'bbox':box_orig, 'base_joints': joints}
         # hand = {'joints': joints, 'bbox':box_orig, 'base_joints': joints}
         # return kp_orig, box_orig

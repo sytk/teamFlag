@@ -52,7 +52,7 @@ class HandGesture():
         ]
 
         self.palm_pos = [0,0]
-        self.gesture = "first"
+        self.gesture = 0
         self.palm_depth = 0
 
         path = './ML/1'
@@ -64,6 +64,9 @@ class HandGesture():
 
         self.model.eval() # モデルを推論モードに変更
         self.lastLPF = 0
+
+        self.pre_ges = []
+        self.return_ges = 0
 
     def get_pose(self, kp,box):
         x0, y0 = 0,0
@@ -99,11 +102,6 @@ class HandGesture():
                 prob, predicted = torch.max(outputs.data, 1) # 確率が最大のラベルを取得
                 # print(prob, predicted)
 
-            # res = self.tree.get_n_nearest_neighbors(kp,1)[0]
-            # a = np.mean(res[1])
-            # # print(res[0],np.where(idx_m == a)[0][0])
-            # idx = np.where(self.idx_m == a)[0][0]
-            # # print(self.indexes[idx])
             self.gesture = np.asarray(predicted)[0]
 
             if prob > 0.6:
@@ -135,7 +133,15 @@ class HandGesture():
         return frame
 
     def getGesture(self):
-        return self.gesture
+        if len(self.pre_ges) == 3:
+            self.pre_ges.pop(0)
+        self.pre_ges.append(self.gesture)
+        print(self.pre_ges.count(self.gesture))
+        if self.pre_ges.count(self.gesture) == 3:
+            self.return_ges = self.gesture
+            return self.return_ges
+        else:
+            return self.return_ges
 
     def getPalmPos(self):
         return self.palm_pos

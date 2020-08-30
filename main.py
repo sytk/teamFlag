@@ -49,7 +49,7 @@ while hasFrame:
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    print(writer.checkOverlap(palm))
+    # print(writer.checkOverlap(palm))
     # print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
