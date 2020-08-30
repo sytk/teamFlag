@@ -4,7 +4,7 @@ import cv2
 class ImageOverwriter():
     image_list = []
     __gesture_list = {"curr": 1, "prev": 1}
-    __is_grabbed = False
+    __grab_image_num = None
     __base_depth = 1
     __hidden_image_index = []
     __stay_time = 0
@@ -64,21 +64,21 @@ class ImageOverwriter():
         return self.__gesture_list["prev"]
 
     def isGrab(self):
-        return self.__is_grabbed
+        return self.__grab_image_num is not None
 
     def grabImage(self, num, depth):
         scale = self.image_list[num]["scale"]
-        if not self.__is_grabbed:
+        if not self.isGrab():
             self.__base_depth = depth / scale
 
         image = self.image_list[num]["org_img"]
         self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
         self.image_list[num]["scale"] = depth / self.__base_depth
 
-        self.__is_grabbed = True
+        self.__grab_image_num = num
 
     def releaseImage(self):
-        self.__is_grabbed = False
+        self.__grab_image_num = None
         self.__base_depth = 1.0
 
     def showImage(self, pos):
@@ -108,10 +108,13 @@ class ImageOverwriter():
             self.showImage(palm)
         if ges == 5:
             prev_ges = self.__gesture_list["prev"]
-            if prev_ges != 5 or self.isGrab():
+            if prev_ges != 5:
                 if len(overlapped_images) > 0:
                     self.grabImage(overlapped_images[0], depth)
                     self.setPosition(overlapped_images[0], palm)
+            elif self.isGrab():
+                self.grabImage(self.__grab_image_num, depth)
+                self.setPosition(self.__grab_image_num, palm)
             else:
                 self.releaseImage()
         if ges == 6:
