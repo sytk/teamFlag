@@ -24,16 +24,15 @@ else:
 detector = HandGesture()
 
 writer = ImageOverwriter()
-writer.addImage("./dog.jpeg")
-writer.setPosition(0, (300, 300))
-writer.addImage("./dog.jpeg")
-writer.setPosition(1, (200, 200))
+# writer.addImage("./dog.jpeg")
+# writer.setPosition(0, (300, 300))
+# writer.addImage("./dog.jpeg")
+# writer.setPosition(1, (200, 200))
 
-# pc = PdfController()
-# pdf = pc.convertToImage("IoTLT.pdf")
-# for i, image in enumerate(pdf):
-#     writer.addImage(image)
-#     writer.setPositionOutScreen(i)
+pc = PdfController()
+pdf = pc.convertToImage("IoTLT.pdf")
+writer.addImages(pdf)
+writer.setPosition(0, (300, 300))
 
 while hasFrame:
     start = time.time()
@@ -45,18 +44,18 @@ while hasFrame:
     ges = detector.getGesture()
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
-    print(ges)
+    # print(ges)
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    print(writer.checkOverlap(palm))
+    # print(writer.checkOverlap(palm))
     # print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
     if key == 27:
         break
-    print(1 / (time.time() - start))
+    # print(1 / (time.time() - start))
 
 capture.release()
 # out.release()
