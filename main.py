@@ -8,7 +8,9 @@ import time
 from hand_ges import HandGesture
 from image_override import ImageOverwriter
 from pdf_controller import PdfController
-
+import concurrent.futures
+import copy
+import time
 WINDOW = "Hand Tracking"
 
 cv2.namedWindow(WINDOW)
@@ -34,22 +36,38 @@ pdf = pc.convertToImage("IoTLT.pdf")
 writer.addImages(pdf)
 writer.setPosition(0, (300, 300))
 
+# pc = PdfController()
+# pdf = pc.convertToImage("IoTLT.pdf")
+# for i, image in enumerate(pdf):
+#     writer.addImage(image)
+#     writer.setPositionOutScreen(i)
+
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+finished = {"window": False, "gesture": False}
+
+start = 0
 while hasFrame:
     start = time.time()
 
     hasFrame, frame = capture.read()
     frame = cv2.flip(frame, 1)
 
+    #普通に処理するとき
     frame = detector.updateGesture(frame)
+
+    #並列処理にするとき
+    # _frame = copy.copy(frame)
+    # executor.submit(detector.updateGesture, _frame)
+
     ges = detector.getGesture()
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
-    # print(ges)
+
+    cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    # print(writer.checkOverlap(palm))
-    # print(ges, palm, depth)
+    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
@@ -58,5 +76,6 @@ while hasFrame:
     # print(1 / (time.time() - start))
 
 capture.release()
+executor.shutdown()
 # out.release()
 cv2.destroyAllWindows()
