@@ -3,7 +3,7 @@ import cv2
 
 class ImageOverwriter:
     image_list = []
-    __gesture_list = {"curr": 0, "prev": 0}
+    __prev_data = {"ges": 0, "palm": (0, 0)}
     __grab_image_index = None
     __base_depth = 1
     __hidden_image_list = []
@@ -75,9 +75,9 @@ class ImageOverwriter:
         else:
             self.image_list[index]["img"] = cv2.resize(image["org_img"], (int(image["org_img"].shape[1] * scale), int(image["org_img"].shape[0] * scale)))
 
-    def updateGesture(self, gesture):
-        self.__gesture_list["prev"] = self.__gesture_list["curr"]
-        self.__gesture_list["curr"] = gesture
+    # def updateGesture(self, gesture):
+    #     self.__gesture_list["prev"] = self.__gesture_list["curr"]
+    #     self.__gesture_list["curr"] = gesture
 
     def getPrevGesture(self):
         return self.__gesture_list["prev"]
@@ -128,9 +128,8 @@ class ImageOverwriter:
         self.__hidden_image_list.append(index)
 
     def overwrite(self, frame, ges, palm, depth):
-        self.updateGesture(ges)
         overlapped_images = self.checkOverlap(palm)
-        prev_ges = self.__gesture_list["prev"]
+        prev_ges = self.__prev_data["ges"]
 
         if ges != 5:
             self.releaseImage()
@@ -151,11 +150,15 @@ class ImageOverwriter:
                 elif self.isGrab():
                     index = self.__grab_image_index
                 self.grabImage(index, depth)
-                self.setPosition(index, palm)
+                pos = self.image_list[index]["pos"]
+                x = pos[0] + palm[0] - self.__prev_data["palm"][0]
+                y = pos[1] + palm[1] - self.__prev_data["palm"][1]
+                self.setPosition(index, (x, y))
+
                 half_width = self.image_list[index]["img"].shape[1] // 2
                 half_height = self.image_list[index]["img"].shape[0] // 2
-                begin = (palm[0] - half_width - 2, palm[1] - half_height - 2)
-                end = (palm[0] + half_width + 2, palm[1] + half_height + 2)
+                begin = (x - half_width - 2, y - half_height - 2)
+                end = (x + half_width + 2, y + half_height + 2)
                 cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
             else:
                 self.releaseImage()
@@ -164,6 +167,8 @@ class ImageOverwriter:
                 self.hideImage(overlapped_images[0])
         if ges == 7:
             pass
+        self.__prev_data["ges"] = ges
+        self.__prev_data["palm"] = palm
 
         for image in self.image_list:
             if image["pos"][0] is None or image["pos"][1] is None:
