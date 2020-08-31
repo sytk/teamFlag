@@ -29,7 +29,7 @@ writer = ImageOverwriter()
 
 writer.addImage("./dog.jpeg")
 writer.setPosition(0, None)
-writer.addImage("./dog.jpeg")
+writer.addImage("./cat.jpeg")
 writer.setPosition(1, None)
 
 pc = PdfController()

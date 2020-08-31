@@ -65,11 +65,8 @@ class ImageOverwriter:
         else:
             width = self.image_list[num]["img"].shape[1]
             height = self.image_list[num]["img"].shape[0]
-
             start_height = sum([self.image_list[i]["img"].shape[0] for i in range(num)])
-
             self.image_list[num]["pos"] = (width // 2, height // 2 + start_height)
-            # self.image_list[num]["pos"] = (width // 2, height // 2 * (num + 1))
 
     def updateGesture(self, gesture):
         self.__gesture_list["prev"] = self.__gesture_list["curr"]
@@ -123,7 +120,14 @@ class ImageOverwriter:
             self.image_list[index]["pos"] = (pos[0], pos[1])
 
     def hideImage(self, num):
-        self.image_list[num]["visible"] = False
+        scale = self.image_list[num]["scale"] = 1.0
+        image = self.image_list[num]["org_img"]
+        if type(image) is list:
+            index = self.image_list[num]["index"]
+            self.image_list[num]["img"] = cv2.resize(image[index], (int(image[index].shape[1] * scale), int(image[index].shape[0] * scale)))
+        else:
+            self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
+        self.setPosition(num, None)
         self.__hidden_image_index.append(num)
 
     def pullImage(self, pos):
