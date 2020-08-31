@@ -37,10 +37,14 @@ pdf = pc.convertToImage("IoTLT.pdf")
 writer.addImages(pdf)
 writer.setPosition(2, None)
 
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
 finished = {"window": False, "gesture": False}
 
 start = 0
+
+future_list = []
+# future.append(executor.submit(detector.updateGesture, frame))
+
 while hasFrame:
     start = time.time()
 
@@ -52,7 +56,22 @@ while hasFrame:
 
     #並列処理にするとき
     _frame = copy.copy(frame)
-    executor.submit(detector.updateGesture, _frame)
+    for f in future_list:
+        print(f.done())
+
+    # if len(future_list) != 0 and future_list[0].done() == True:
+    #     future_list.pop(0)
+    for i, f in enumerate(future_list):
+        if f.done() == True:
+            future_list.pop(i)
+
+    if len(future_list) < os.cpu_count():
+        future_list.append(executor.submit(detector.updateGesture, _frame))
+    print(len(future_list))
+
+    # print(future.done())
+    # if future.done() == True:
+    #     future = executor.submit(detector.updateGesture, _frame)
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
@@ -66,7 +85,7 @@ while hasFrame:
     if ges == 1:
         cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
 
-    print(ges, palm, depth)
+    # print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
