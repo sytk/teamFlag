@@ -65,7 +65,11 @@ class ImageOverwriter:
         else:
             width = self.image_list[num]["img"].shape[1]
             height = self.image_list[num]["img"].shape[0]
-            self.image_list[num]["pos"] = (width // 2, height // 2 * (num + 1))
+
+            start_height = sum([self.image_list[i]["img"].shape[0] for i in range(num)])
+
+            self.image_list[num]["pos"] = (width // 2, height // 2 + start_height)
+            # self.image_list[num]["pos"] = (width // 2, height // 2 * (num + 1))
 
     def updateGesture(self, gesture):
         self.__gesture_list["prev"] = self.__gesture_list["curr"]

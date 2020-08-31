@@ -26,15 +26,16 @@ else:
 detector = HandGesture()
 
 writer = ImageOverwriter()
-# writer.addImage("./dog.jpeg")
-# writer.setPosition(0, (300, 300))
-# writer.addImage("./dog.jpeg")
-# writer.setPosition(1, (200, 200))
+
+writer.addImage("./dog.jpeg")
+writer.setPosition(0, None)
+writer.addImage("./dog.jpeg")
+writer.setPosition(1, None)
 
 pc = PdfController()
 pdf = pc.convertToImage("IoTLT.pdf")
 writer.addImages(pdf)
-writer.setPosition(0, None)
+writer.setPosition(2, None)
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 finished = {"window": False, "gesture": False}
@@ -47,11 +48,11 @@ while hasFrame:
     frame = cv2.flip(frame, 1)
 
     #普通に処理するとき
-    frame = detector.updateGesture(frame)
+    # frame = detector.updateGesture(frame)
 
     #並列処理にするとき
-    # _frame = copy.copy(frame)
-    # executor.submit(detector.updateGesture, _frame)
+    _frame = copy.copy(frame)
+    executor.submit(detector.updateGesture, _frame)
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
@@ -67,7 +68,7 @@ while hasFrame:
     key = cv2.waitKey(1)
     if key == 27:
         break
-    # print(1 / (time.time() - start))
+    print(1 / (time.time() - start))
 
 capture.release()
 executor.shutdown()

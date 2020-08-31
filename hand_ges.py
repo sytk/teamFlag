@@ -150,7 +150,7 @@ class HandGesture():
     def getPalmPos(self):
         if self.last_palm_pos == [0,0]:
             self.last_palm_pos = self.palm_pos
-        k = 0.2
+        k = 0.4
         LPF = []
         for pre, curr in zip(self.last_palm_pos, self.palm_pos):
             LPF.append( (1 - k) * pre + k * curr)
