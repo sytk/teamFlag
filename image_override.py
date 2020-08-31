@@ -6,7 +6,7 @@ class ImageOverwriter:
     __gesture_list = {"curr": 0, "prev": 0}
     __grab_image_num = None
     __base_depth = 1
-    __hidden_image_index = []
+    __hidden_image_list = []
     __stay_time = 0
 
     def __init__(self):
@@ -16,8 +16,7 @@ class ImageOverwriter:
         org_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         scale = 250 / org_img.shape[1]
         img = cv2.resize(org_img, (int(org_img.shape[1] * scale), int(org_img.shape[0] * scale)))
-        dict = {"path": path, "org_img": org_img, "img": img, "scale": scale, "visible": True, "pos": (None, None),
-                "out_screen": False}
+        dict = {"path": path, "org_img": org_img, "img": img, "scale": scale, "visible": True, "pos": (None, None)}
         self.image_list.append(dict)
 
     def addImages(self, path_list):
@@ -29,7 +28,7 @@ class ImageOverwriter:
             scale = 250 / org_img.shape[1]
             org_images.append(org_img)
         img = cv2.resize(org_images[0], (int(org_images[0].shape[1] * scale), int(org_images[0].shape[0] * scale)))
-        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "scale": scale, "visible": True, "pos": (None, None), "out_screen": False}
+        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "scale": scale, "visible": True, "pos": (None, None)}
         self.image_list.append(dict)
 
     def checkOverlap(self, pos):
@@ -104,70 +103,54 @@ class ImageOverwriter:
         self.__base_depth = 1.0
 
     def showImage(self, pos):
-        if len(self.__hidden_image_index) > 0:
-            index = self.__hidden_image_index.pop()
-            self.image_list[index]["visible"] = True
-            self.image_list[index]["pos"] = (pos[0], pos[1])
+        index = self.__hidden_image_list.pop()
+        self.image_list[index]["visible"] = True
+        self.image_list[index]["pos"] = (pos[0], pos[1])
 
     def hideImage(self, num):
         self.setPosition(num, None)
-        self.__hidden_image_index.append(num)
-
-    def pullImage(self, pos):
-        for i, image in enumerate(self.image_list):
-            if image["out_screen"]:
-                self.setPosition(i, pos)
-                image["out_screen"] = False
-                break
+        scale = 0
+        if type(self.image_list[num]["org_img"]) is list:
+            scale = 250 / self.image_list[num]["org_img"][0].shape[1]
+        else:
+            scale = 250 / self.image_list[num]["org_img"].shape[1]
+        self.image_list[num]["scale"] = scale
+        self.__hidden_image_list.append(num)
 
     def overwrite(self, frame, ges, palm, depth):
         self.updateGesture(ges)
         overlapped_images = self.checkOverlap(palm)
+        prev_ges = self.__gesture_list["prev"]
 
         if ges != 5:
             self.releaseImage()
         if ges == 2:
-            prev_ges = self.__gesture_list["prev"]
             if prev_ges != 2 and len(overlapped_images) > 0:
                 self.changePage(overlapped_images[0], "prev")
         if ges == 3:
-            prev_ges = self.__gesture_list["prev"]
             if prev_ges != 3 and len(overlapped_images) > 0:
                 self.changePage(overlapped_images[0], "next")
         if ges == 4:
-            self.showImage(palm)
+            if prev_ges != 4 and len(self.__hidden_image_list):
+                self.showImage(palm)
         if ges == 5:
-            prev_ges = self.__gesture_list["prev"]
-            if prev_ges != 5:
-                if len(overlapped_images) > 0:
-                    self.grabImage(overlapped_images[0], depth)
-                    self.setPosition(overlapped_images[0], palm)
+            if prev_ges != 5 and len(overlapped_images) > 0:
+                self.grabImage(overlapped_images[0], depth)
+                self.setPosition(overlapped_images[0], palm)
             elif self.isGrab():
                 self.grabImage(self.__grab_image_num, depth)
                 self.setPosition(self.__grab_image_num, palm)
             else:
                 self.releaseImage()
         if ges == 6:
-            if len(overlapped_images) > 0:
+            if prev_ges != 6 and len(overlapped_images) > 0:
                 self.hideImage(overlapped_images[0])
         if ges == 7:
-            prev_ges = self.__gesture_list["prev"]
-            if prev_ges != 7:
-                self.pullImage(palm)
-        elif 0 < palm[0] < 100:
-            self.__stay_time += 1
-            if self.__stay_time >= 5:
-                self.pullImage(palm)
-                self.__stay_time = 0
-        else:
-            self.__stay_time = 0
+            pass
 
         for image in self.image_list:
             if image["pos"][0] is None or image["pos"][1] is None:
                 image["visible"] = False
-            elif image["pos"][0] < 0 or image["pos"][1] < 0:
-                image["out_screen"] = True
-                continue
 
             if image["visible"]:
                 scale = image["scale"]
@@ -226,18 +209,14 @@ class ImageOverwriter:
 
                 # はみ出ているフラグが立ってたら
                 if outsideflag:
-                    try:
-                        # 上記の結果から画像を切り取り
-                        # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
-                        cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
-                        # カットした写真を合成
-                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                        frame[
-                        dpty - imgheight // 2 + upoutsideimg:dpty - imgheight // 2 + imgheight - downoutsideimg,
-                        dptx - imgwidth // 2 + leftoutsideimg:dptx - imgwidth // 2 + imgwidth - rightoutsideimg] = cutimg
-                    except ValueError:
-                        image["out_screen"] = True
-                        continue
+                    # 上記の結果から画像を切り取り
+                    # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
+                    cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
+                    # カットした写真を合成
+                    # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                    frame[
+                    dpty - imgheight // 2 + upoutsideimg:dpty - imgheight // 2 + imgheight - downoutsideimg,
+                    dptx - imgwidth // 2 + leftoutsideimg:dptx - imgwidth // 2 + imgwidth - rightoutsideimg] = cutimg
 
                 # 　外にはみ出る物がない時
                 else:
