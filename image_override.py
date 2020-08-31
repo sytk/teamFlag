@@ -78,18 +78,20 @@ class ImageOverwriter:
         return self.__grab_image_num is not None
 
     def changePage(self, num, direction):
-        if type(self.image_list[num]["org_img"]) is list:
+        images = self.image_list[num]["org_img"]
+        if type(images) is list:
             index = self.image_list[num]["index"]
             if direction == "prev":
                 index -= 1
                 if index < 0:
-                    index = len(self.image_list[num]["org_img"]) - 1
+                    index = len(images) - 1
             elif direction == "next":
                 index += 1
-                if index >= len(self.image_list[num]["org_img"]):
+                if index >= len(images):
                     index = 0
             self.image_list[num]["index"] = index
-            self.image_list[num]["img"] = self.image_list[num]["org_img"][index]
+            scale = self.image_list[num]["scale"]
+            self.image_list[num]["img"] = cv2.resize(images[index], (int(images[index].shape[1] * scale), int(images[index].shape[0] * scale)))
 
     def grabImage(self, num, depth):
         scale = self.image_list[num]["scale"]
