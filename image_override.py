@@ -13,24 +13,23 @@ class ImageOverwriter:
         pass
 
     def addImage(self, path):
-        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-
-        scale = 250 / img.shape[1]
-        img = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
-
-        dict = {"path": path, "org_img": img, "img": img, "scale": 1.0, "visible": True, "pos": (None, None),
+        org_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+        scale = 250 / org_img.shape[1]
+        img = cv2.resize(org_img, (int(org_img.shape[1] * scale), int(org_img.shape[0] * scale)))
+        dict = {"path": path, "org_img": org_img, "img": img, "scale": scale, "visible": True, "pos": (None, None),
                 "out_screen": False}
         self.image_list.append(dict)
 
     def addImages(self, path_list):
-        images = []
+        org_images = []
+        scale = 0
         for path in path_list:
-            img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+            org_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
 
-            scale = 250 / img.shape[1]
-            img = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
-            images.append(img)
-        dict = {"path": path_list, "org_img": images, "img": images[0], "index": 0, "scale": 1.0, "visible": True, "pos": (None, None), "out_screen": False}
+            scale = 250 / org_img.shape[1]
+            org_images.append(org_img)
+        img = cv2.resize(org_images[0], (int(org_images[0].shape[1] * scale), int(org_images[0].shape[0] * scale)))
+        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "scale": scale, "visible": True, "pos": (None, None), "out_screen": False}
         self.image_list.append(dict)
 
     def checkOverlap(self, pos):
@@ -91,20 +90,11 @@ class ImageOverwriter:
                 if index >= len(images):
                     index = 0
             self.image_list[num]["index"] = index
-            scale = self.image_list[num]["scale"]
-            self.image_list[num]["img"] = cv2.resize(images[index], (int(images[index].shape[1] * scale), int(images[index].shape[0] * scale)))
 
     def grabImage(self, num, depth):
         scale = self.image_list[num]["scale"]
         if not self.isGrab():
             self.__base_depth = depth / scale
-
-        image = self.image_list[num]["org_img"]
-        if type(image) is list:
-            index = self.image_list[num]["index"]
-            self.image_list[num]["img"] = cv2.resize(image[index], (int(image[index].shape[1] * scale), int(image[index].shape[0] * scale)))
-        else:
-            self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
 
         self.image_list[num]["scale"] = depth / self.__base_depth
         self.__grab_image_num = num
@@ -120,13 +110,6 @@ class ImageOverwriter:
             self.image_list[index]["pos"] = (pos[0], pos[1])
 
     def hideImage(self, num):
-        scale = self.image_list[num]["scale"] = 1.0
-        image = self.image_list[num]["org_img"]
-        if type(image) is list:
-            index = self.image_list[num]["index"]
-            self.image_list[num]["img"] = cv2.resize(image[index], (int(image[index].shape[1] * scale), int(image[index].shape[0] * scale)))
-        else:
-            self.image_list[num]["img"] = cv2.resize(image, (int(image.shape[1] * scale), int(image.shape[0] * scale)))
         self.setPosition(num, None)
         self.__hidden_image_index.append(num)
 
@@ -187,6 +170,13 @@ class ImageOverwriter:
                 continue
 
             if image["visible"]:
+                scale = image["scale"]
+                if type(image["org_img"]) is list:
+                    index = image["index"]
+                    image["img"] = cv2.resize(image["org_img"][index], (int(image["org_img"][index].shape[1] * scale), int(image["org_img"][index].shape[0] * scale)))
+                else:
+                    image["img"] = cv2.resize(image["org_img"], (int(image["org_img"].shape[1] * scale), int(image["org_img"].shape[0] * scale)))
+
                 cutimage = image["img"]
                 dptx = image["pos"][0]
                 dpty = image["pos"][1]
