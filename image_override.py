@@ -4,7 +4,7 @@ import cv2
 class ImageOverwriter:
     image_list = []
     __gesture_list = {"curr": 0, "prev": 0}
-    __grab_image_num = None
+    __grab_image_index = None
     __base_depth = 1
     __hidden_image_list = []
     __stay_time = 0
@@ -74,7 +74,7 @@ class ImageOverwriter:
         return self.__gesture_list["prev"]
 
     def isGrab(self):
-        return self.__grab_image_num is not None
+        return self.__grab_image_index is not None
 
     def changePage(self, num, direction):
         images = self.image_list[num]["org_img"]
@@ -90,16 +90,16 @@ class ImageOverwriter:
                     index = 0
             self.image_list[num]["index"] = index
 
-    def grabImage(self, num, depth):
-        scale = self.image_list[num]["scale"]
+    def grabImage(self, index, depth):
+        scale = self.image_list[index]["scale"]
         if not self.isGrab():
             self.__base_depth = depth / scale
 
-        self.image_list[num]["scale"] = depth / self.__base_depth
-        self.__grab_image_num = num
+        self.image_list[index]["scale"] = depth / self.__base_depth
+        self.__grab_image_index = index
 
     def releaseImage(self):
-        self.__grab_image_num = None
+        self.__grab_image_index = None
         self.__base_depth = 1.0
 
     def showImage(self, pos):
@@ -107,15 +107,15 @@ class ImageOverwriter:
         self.image_list[index]["visible"] = True
         self.image_list[index]["pos"] = (pos[0], pos[1])
 
-    def hideImage(self, num):
-        self.setPosition(num, None)
+    def hideImage(self, index):
+        self.setPosition(index, None)
         scale = 0
-        if type(self.image_list[num]["org_img"]) is list:
-            scale = 250 / self.image_list[num]["org_img"][0].shape[1]
+        if type(self.image_list[index]["org_img"]) is list:
+            scale = 250 / self.image_list[index]["org_img"][0].shape[1]
         else:
-            scale = 250 / self.image_list[num]["org_img"].shape[1]
-        self.image_list[num]["scale"] = scale
-        self.__hidden_image_list.append(num)
+            scale = 250 / self.image_list[index]["org_img"].shape[1]
+        self.image_list[index]["scale"] = scale
+        self.__hidden_image_list.append(index)
 
     def overwrite(self, frame, ges, palm, depth):
         self.updateGesture(ges)
@@ -134,12 +134,19 @@ class ImageOverwriter:
             if prev_ges != 4 and len(self.__hidden_image_list):
                 self.showImage(palm)
         if ges == 5:
-            if prev_ges != 5 and len(overlapped_images) > 0:
-                self.grabImage(overlapped_images[0], depth)
-                self.setPosition(overlapped_images[0], palm)
-            elif self.isGrab():
-                self.grabImage(self.__grab_image_num, depth)
-                self.setPosition(self.__grab_image_num, palm)
+            if len(overlapped_images) > 0:
+                index = 0
+                if prev_ges != 5:
+                    index = overlapped_images[0]
+                elif self.isGrab():
+                    index = self.__grab_image_index
+                self.grabImage(index, depth)
+                self.setPosition(index, palm)
+                half_width = self.image_list[index]["img"].shape[1] // 2
+                half_height = self.image_list[index]["img"].shape[0] // 2
+                begin = (palm[0] - half_width - 2, palm[1] - half_height - 2)
+                end = (palm[0] + half_width + 2, palm[1] + half_height + 2)
+                cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
             else:
                 self.releaseImage()
         if ges == 6:
