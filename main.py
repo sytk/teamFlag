@@ -1,3 +1,4 @@
+# coding: utf-8
 import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -41,9 +42,7 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
 finished = {"window": False, "gesture": False}
 
 start = 0
-
 future_list = []
-# future.append(executor.submit(detector.updateGesture, frame))
 
 while hasFrame:
     start = time.time()
@@ -56,22 +55,10 @@ while hasFrame:
 
     #並列処理にするとき
     _frame = copy.copy(frame)
-    for f in future_list:
-        print(f.done())
-
-    # if len(future_list) != 0 and future_list[0].done() == True:
-    #     future_list.pop(0)
-    for i, f in enumerate(future_list):
-        if f.done() == True:
-            future_list.pop(i)
-
+    future_list = [f for f in future_list if f.done() == False]
     if len(future_list) < os.cpu_count():
         future_list.append(executor.submit(detector.updateGesture, _frame))
-    print(len(future_list))
-
-    # print(future.done())
-    # if future.done() == True:
-    #     future = executor.submit(detector.updateGesture, _frame)
+    # print(len(future_list))
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
