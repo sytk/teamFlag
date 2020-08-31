@@ -155,13 +155,14 @@ class ImageOverwriter:
                     index = overlapped_images[0]
                 elif self.isGrab():
                     index = self.__grab_image_index
-                self.grabImage(index, depth)
-                self.setPosition(index, palm)
-                half_width = self.image_list[index]["img"].shape[1] // 2
-                half_height = self.image_list[index]["img"].shape[0] // 2
-                begin = (palm[0] - half_width - 2, palm[1] - half_height - 2)
-                end = (palm[0] + half_width + 2, palm[1] + half_height + 2)
-                cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
+                if self.image_list[index]["visible"]:
+                    self.grabImage(index, depth)
+                    self.setPosition(index, palm)
+                    half_width = self.image_list[index]["img"].shape[1] // 2
+                    half_height = self.image_list[index]["img"].shape[0] // 2
+                    begin = (palm[0] - half_width - 2, palm[1] - half_height - 2)
+                    end = (palm[0] + half_width + 2, palm[1] + half_height + 2)
+                    cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
             else:
                 self.releaseImage()
         if ges == 6:
