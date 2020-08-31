@@ -57,12 +57,16 @@ while hasFrame:
     ges = detector.getGesture()
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
+    finger = detector.getFingerPos()
 
     cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    # print(ges, palm, depth)
+    if ges == 1:
+        cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
+
+    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
@@ -70,7 +74,7 @@ while hasFrame:
         break
     print(1 / (time.time() - start))
 
-capture.release()
 executor.shutdown()
+capture.release()
 # out.release()
 cv2.destroyAllWindows()

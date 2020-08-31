@@ -63,11 +63,14 @@ class HandGesture():
         self.model.load_state_dict(last_state)
 
         self.model.eval() # モデルを推論モードに変更
-        self.lastLPF = 0
+        self.last_palm_depth = 0
         self.last_palm_pos = [0,0]
 
         self.pre_ges = []
         self.return_ges = 0
+
+        self.finger_pos = [0,0]
+        self.last_finger_pos = [0,0]
 
     def get_pose(self, kp,box):
         x0, y0 = 0,0
@@ -127,6 +130,7 @@ class HandGesture():
             palms = np.asarray([points[0], points[5],points[9],points[13], points[17]])
             self.palm_pos = palms.mean(axis=0)
             self.palm_pos = [int(p) for p in self.palm_pos]
+            self.finger_pos = [int(p) for p in points[8]]
 
             cv2.circle(frame, (self.palm_pos[0], self.palm_pos[1]), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
             # out.write(frame)
@@ -154,19 +158,28 @@ class HandGesture():
         LPF = []
         for pre, curr in zip(self.last_palm_pos, self.palm_pos):
             LPF.append( (1 - k) * pre + k * curr)
-        self.last_palm_pos = LPF;
+        self.last_palm_pos = LPF
         return [int(p) for p in LPF]
         # return self.palm_pos
 
     def getPalmDepth(self):
-        if self.lastLPF == 0:
-            self.lastLPF = self.palm_depth
-        k = 0.2
-        LPF = (1 - k) * self.lastLPF + k * self.palm_depth;
-        self.lastLPF = LPF;
+        if self.last_palm_depth == 0:
+            self.last_palm_depth = self.palm_depth
+        k = 0.4
+        LPF = (1 - k) * self.last_palm_depth + k * self.palm_depth;
+        self.last_palm_depth = LPF
         return LPF
         # return self.palm_depth
 
+    def getFingerPos(self):
+        if self.last_finger_pos == [0,0]:
+            self.last_finger_pos = self.finger_pos
+        k = 0.4
+        LPF = []
+        for pre, curr in zip(self.last_finger_pos, self.finger_pos):
+            LPF.append( (1 - k) * pre + k * curr)
+        self.last_finger_pos = LPF
+        return [int(p) for p in LPF]
 
     def __computePalmDepth(self, a, b):
         A = np.asarray(a)
