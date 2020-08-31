@@ -16,8 +16,9 @@ class ImageOverwriter:
         org_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         scale = 250 / org_img.shape[1]
         img = cv2.resize(org_img, (int(org_img.shape[1] * scale), int(org_img.shape[0] * scale)))
-        dict = {"path": path, "org_img": org_img, "img": img, "scale": scale, "visible": True, "pos": (None, None)}
+        dict = {"path": path, "org_img": org_img, "img": img, "scale": scale, "visible": False, "pos": (None, None)}
         self.image_list.append(dict)
+        self.__hidden_image_list.append(len(self.image_list) - 1)
 
     def addImages(self, path_list):
         org_images = []
@@ -28,8 +29,9 @@ class ImageOverwriter:
             scale = 250 / org_img.shape[1]
             org_images.append(org_img)
         img = cv2.resize(org_images[0], (int(org_images[0].shape[1] * scale), int(org_images[0].shape[0] * scale)))
-        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "scale": scale, "visible": True, "pos": (None, None)}
+        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "scale": scale, "visible": False, "pos": (None, None)}
         self.image_list.append(dict)
+        self.__hidden_image_list.append(len(self.image_list) - 1)
 
     def checkOverlap(self, pos):
         overlapped_img = []
@@ -106,6 +108,8 @@ class ImageOverwriter:
             self.__base_depth = depth / scale
         self.image_list[index]["scale"] = depth / self.__base_depth
         self.__grab_image_index = index
+        if index in self.__hidden_image_list:
+            self.__hidden_image_list.remove(index)
         self.applyScale(index)
 
     def releaseImage(self):
@@ -125,6 +129,7 @@ class ImageOverwriter:
             self.image_list[index]["scale"] = 250 / self.image_list[index]["org_img"].shape[1]
         self.applyScale(index)
         self.setPosition(index, None)
+        self.image_list[index]["visible"] = False
         self.__hidden_image_list.append(index)
 
     def overwrite(self, frame, ges, palm, depth):
@@ -165,9 +170,14 @@ class ImageOverwriter:
         if ges == 7:
             pass
 
-        for image in self.image_list:
+        for i, image in enumerate(self.image_list):
             if image["pos"][0] is None or image["pos"][1] is None:
                 image["visible"] = False
+            if i in self.__hidden_image_list:
+                if 0 < palm[0] <= 200:
+                    image["visible"] = True
+                else:
+                    image["visible"] = False
 
             if image["visible"]:
                 cutimage = image["img"]
