@@ -66,6 +66,15 @@ class ImageOverwriter:
             start_height = sum([self.image_list[i]["img"].shape[0] for i in range(num)])
             self.image_list[num]["pos"] = (width // 2, height // 2 + start_height)
 
+    def applyScale(self, index):
+        image = self.image_list[index]
+        scale = image["scale"]
+        if type(image["org_img"]) is list:
+            org_img_index = image["index"]
+            self.image_list[index]["img"] = cv2.resize(image["org_img"][org_img_index], (int(image["org_img"][org_img_index].shape[1] * scale), int(image["org_img"][org_img_index].shape[0] * scale)))
+        else:
+            self.image_list[index]["img"] = cv2.resize(image["org_img"], (int(image["org_img"].shape[1] * scale), int(image["org_img"].shape[0] * scale)))
+
     def updateGesture(self, gesture):
         self.__gesture_list["prev"] = self.__gesture_list["curr"]
         self.__gesture_list["curr"] = gesture
@@ -77,26 +86,27 @@ class ImageOverwriter:
         return self.__grab_image_index is not None
 
     def changePage(self, num, direction):
-        images = self.image_list[num]["org_img"]
-        if type(images) is list:
+        org_img = self.image_list[num]["org_img"]
+        if type(org_img) is list:
             index = self.image_list[num]["index"]
             if direction == "prev":
                 index -= 1
                 if index < 0:
-                    index = len(images) - 1
+                    index = len(org_img) - 1
             elif direction == "next":
                 index += 1
-                if index >= len(images):
+                if index >= len(org_img):
                     index = 0
             self.image_list[num]["index"] = index
+            self.applyScale(num)
 
     def grabImage(self, index, depth):
         scale = self.image_list[index]["scale"]
         if not self.isGrab():
             self.__base_depth = depth / scale
-
         self.image_list[index]["scale"] = depth / self.__base_depth
         self.__grab_image_index = index
+        self.applyScale(index)
 
     def releaseImage(self):
         self.__grab_image_index = None
@@ -104,17 +114,17 @@ class ImageOverwriter:
 
     def showImage(self, pos):
         index = self.__hidden_image_list.pop()
+        self.applyScale(index)
         self.image_list[index]["visible"] = True
         self.image_list[index]["pos"] = (pos[0], pos[1])
 
     def hideImage(self, index):
-        self.setPosition(index, None)
-        scale = 0
         if type(self.image_list[index]["org_img"]) is list:
-            scale = 250 / self.image_list[index]["org_img"][0].shape[1]
+            self.image_list[index]["scale"] = 250 / self.image_list[index]["org_img"][0].shape[1]
         else:
-            scale = 250 / self.image_list[index]["org_img"].shape[1]
-        self.image_list[index]["scale"] = scale
+            self.image_list[index]["scale"] = 250 / self.image_list[index]["org_img"].shape[1]
+        self.applyScale(index)
+        self.setPosition(index, None)
         self.__hidden_image_list.append(index)
 
     def overwrite(self, frame, ges, palm, depth):
@@ -160,13 +170,6 @@ class ImageOverwriter:
                 image["visible"] = False
 
             if image["visible"]:
-                scale = image["scale"]
-                if type(image["org_img"]) is list:
-                    index = image["index"]
-                    image["img"] = cv2.resize(image["org_img"][index], (int(image["org_img"][index].shape[1] * scale), int(image["org_img"][index].shape[0] * scale)))
-                else:
-                    image["img"] = cv2.resize(image["org_img"], (int(image["org_img"].shape[1] * scale), int(image["org_img"].shape[0] * scale)))
-
                 cutimage = image["img"]
                 dptx = image["pos"][0]
                 dpty = image["pos"][1]
