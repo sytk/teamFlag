@@ -57,7 +57,7 @@ while hasFrame:
     future_list = [f for f in future_list if f.done() == False]
     if len(future_list) < os.cpu_count():
         future_list.append(executor.submit(detector.updateGesture, _frame))
-    # print(len(future_list))
+    print(len(future_list))
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
