@@ -95,16 +95,15 @@ class HandGesture():
             box = hand['bbox']
             bkp = hand['base_joints']
 
+        if hand is not None and self.points[17][0] > self.points[5][0]:
             kp = self.get_pose(bkp,box)
 
             pose = torch.from_numpy(np.asarray(kp))
             pose = torch.unsqueeze(pose,0)
-            # print(pose.size())
             pose = pose.to(self.device, dtype=torch.float)
             with torch.no_grad(): # 推論時には勾配は不要
                 outputs = self.model(pose) # 順伝播の計算
                 prob, predicted = torch.max(outputs.data, 1) # 確率が最大のラベルを取得
-                # print(prob, predicted)
 
             if prob < 0.6:
                 self.gesture = 0
@@ -120,7 +119,6 @@ class HandGesture():
             self.finger_pos = [int(p) for p in self.points[8]]
 
             cv2.circle(frame, (self.palm_pos[0], self.palm_pos[1]), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
-            # out.write(frame)
             # print(self.points[5], self.points[17])
             self.palm_depth = self.__computePalmDepth(self.points[5], self.points[17])
         else:
@@ -128,6 +126,7 @@ class HandGesture():
             self.pal_pos = [0,0]
             self.finger_pos = [0,0]
             self.palm_depth = 0
+            # self.points = None
         return frame
 
     def getGesture(self):

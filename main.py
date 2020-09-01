@@ -57,13 +57,13 @@ while hasFrame:
     future_list = [f for f in future_list if f.done() == False]
     if len(future_list) < os.cpu_count():
         future_list.append(executor.submit(detector.updateGesture, _frame))
-    print(len(future_list))
+    # print(len(future_list))
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
     finger = detector.getFingerPos()
-    print(ges, palm, depth)
+    # print(ges, palm, depth)
 
     cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
@@ -82,7 +82,7 @@ while hasFrame:
         break
     elif key == ord('s'):
         skeleton_flag = not skeleton_flag
-    print(1 / (time.time() - start))
+    # print(1 / (time.time() - start))
 
 executor.shutdown()
 capture.release()

@@ -63,11 +63,25 @@ class ImageOverwriter:
         if pos is not None:
             self.image_list[num]["pos"] = (pos[0], pos[1])
         else:
-            width = self.image_list[num]["img"].shape[1]
-            height = self.image_list[num]["img"].shape[0]
-            start_height = sum([self.image_list[i]["img"].shape[0] for i in range(num)])
-            self.image_list[num]["pos"] = (width // 2, height // 2 + start_height)
+            scale = self.image_list[num]["default_scale"]
 
+            if type(self.image_list[num]["org_img"]) is list:
+                org_img = self.image_list[num]["org_img"][0]
+            else:
+                org_img = self.image_list[num]["org_img"]
+
+            width = org_img.shape[1] * scale
+            height = org_img.shape[0] * scale
+
+            org_images = [self.image_list[i]["org_img"] for i in range(num)]
+            scales = [self.image_list[i]["default_scale"] for i in range(num)]
+
+            start_height = sum([org_images[i][0].shape[0] * scales[i] for i in range(num) if type(org_images[i]) is list])
+
+            start_height += sum([org_images[i].shape[0] * scales[i] for i in range(num) if type(org_images[i]) is not list])
+
+            self.image_list[num]["pos"] = (width // 2, height // 2 + start_height)
+            print(self.image_list[num]["pos"])
     def applyScale(self, index, restore_default):
         image = self.image_list[index]
         scale = 0
