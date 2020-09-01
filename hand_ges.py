@@ -99,6 +99,7 @@ class HandGesture():
             box = hand['bbox']
             bkp = hand['base_joints']
 
+        if hand is not None and self.points[5][0] < self.points[17][0]:
             kp = self.get_pose(bkp,box)
 
             pose = torch.from_numpy(np.asarray(kp))
@@ -171,7 +172,7 @@ class HandGesture():
     def getPalmDepth(self):
         if self.last_palm_depth == 0:
             self.last_palm_depth = self.palm_depth
-        k = 0.4
+        k = 0.2
         LPF = (1 - k) * self.last_palm_depth + k * self.palm_depth;
         self.last_palm_depth = LPF
         return LPF
