@@ -90,10 +90,10 @@ class HandGesture():
 
     def updateGesture(self, frame):
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        scale = 0.5
-        img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
-      
-
+        # scale =
+        scale = 1
+        # img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
+        img_ = img
         # start = time.time()
         hand = self.detector(img_)
         # print(time.time()-start)
@@ -122,7 +122,7 @@ class HandGesture():
                 cv2.putText(frame, str(prob),(20,30), font, 1,(255,0,0),2,cv2.LINE_AA)
             else:
                 self.gesture = 0
-            
+
             if self.points is not None:
                self.points = [point/scale for point in self.points]
             #    for point in self.points:
@@ -132,9 +132,6 @@ class HandGesture():
             #        x0, y0 = self.points[connection[0]]
             #        x1, y1 = self.points[connection[1]]
             #        cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
-            #print("hand")
-            ##print(self.points)
-            #print(self.connections)
             
             palms = np.asarray([self.points[0], self.points[5],self.points[9],self.points[13], self.points[17]])
             self.palm_pos = palms.mean(axis=0)
@@ -157,6 +154,8 @@ class HandGesture():
         if self.pre_ges.count(self.gesture) == 3:
             self.return_ges = self.gesture
             return self.return_ges
+        elif self.gesture == 5:
+            return 5
         else:
             return self.return_ges
 

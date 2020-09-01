@@ -28,14 +28,14 @@ detector = HandGesture()
 
 writer = ImageOverwriter()
 
-writer.addImage("./dog.jpeg")
-writer.setPosition(0, None)
-writer.addImage("./cat.jpeg")
-writer.setPosition(1, None)
-
 pc = PdfController()
-pdf = pc.convertToImage("IoTLT.pdf")
+pdf = pc.convertToImage("hacku.pdf")
 writer.addImages(pdf)
+writer.setPosition(0, None)
+
+writer.addImage("./dog.jpeg")
+writer.setPosition(1, None)
+writer.addImage("./cat.jpeg")
 writer.setPosition(2, None)
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
@@ -59,7 +59,7 @@ while hasFrame:
     future_list = [f for f in future_list if f.done() == False]
     if len(future_list) < os.cpu_count():
         future_list.append(executor.submit(detector.updateGesture, _frame))
-    # print(len(future_list))
+    print(len(future_list))
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
@@ -90,7 +90,7 @@ while hasFrame:
     if ges == 1:
         cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
 
-    # print(ges, palm, depth)
+    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
