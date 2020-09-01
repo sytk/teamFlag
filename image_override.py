@@ -16,7 +16,7 @@ class ImageOverwriter:
         org_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         scale = 250 / org_img.shape[1]
         img = cv2.resize(org_img, (int(org_img.shape[1] * scale), int(org_img.shape[0] * scale)))
-        dict = {"path": path, "org_img": org_img, "img": img, "scale": scale, "visible": False, "pos": (None, None)}
+        dict = {"path": path, "org_img": org_img, "img": img, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None)}
         self.image_list.append(dict)
         self.__hidden_image_list.append(len(self.image_list) - 1)
 
@@ -29,7 +29,7 @@ class ImageOverwriter:
             scale = 250 / org_img.shape[1]
             org_images.append(org_img)
         img = cv2.resize(org_images[0], (int(org_images[0].shape[1] * scale), int(org_images[0].shape[0] * scale)))
-        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "scale": scale, "visible": False, "pos": (None, None)}
+        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None)}
         self.image_list.append(dict)
         self.__hidden_image_list.append(len(self.image_list) - 1)
 
@@ -68,9 +68,13 @@ class ImageOverwriter:
             start_height = sum([self.image_list[i]["img"].shape[0] for i in range(num)])
             self.image_list[num]["pos"] = (width // 2, height // 2 + start_height)
 
-    def applyScale(self, index):
+    def applyScale(self, index, restore_default):
         image = self.image_list[index]
-        scale = image["scale"]
+        scale = 0
+        if restore_default:
+            scale = image["default_scale"]
+        else:
+            scale = image["scale"]
         if type(image["org_img"]) is list:
             org_img_index = image["index"]
             self.image_list[index]["img"] = cv2.resize(image["org_img"][org_img_index], (int(image["org_img"][org_img_index].shape[1] * scale), int(image["org_img"][org_img_index].shape[0] * scale)))
@@ -100,7 +104,7 @@ class ImageOverwriter:
                 if index >= len(org_img):
                     index = 0
             self.image_list[num]["index"] = index
-            self.applyScale(num)
+            self.applyScale(num, restore_default=False)
 
     def grabImage(self, index, depth):
         scale = self.image_list[index]["scale"]
@@ -110,7 +114,7 @@ class ImageOverwriter:
         self.__grab_image_index = index
         if index in self.__hidden_image_list:
             self.__hidden_image_list.remove(index)
-        self.applyScale(index)
+        self.applyScale(index, restore_default=False)
 
     def releaseImage(self):
         self.__grab_image_index = None
@@ -118,16 +122,12 @@ class ImageOverwriter:
 
     def showImage(self, pos):
         index = self.__hidden_image_list.pop()
-        self.applyScale(index)
+        self.applyScale(index, restore_default=False)
         self.image_list[index]["visible"] = True
         self.image_list[index]["pos"] = (pos[0], pos[1])
 
     def hideImage(self, index):
-        if type(self.image_list[index]["org_img"]) is list:
-            self.image_list[index]["scale"] = 250 / self.image_list[index]["org_img"][0].shape[1]
-        else:
-            self.image_list[index]["scale"] = 250 / self.image_list[index]["org_img"].shape[1]
-        self.applyScale(index)
+        self.applyScale(index, restore_default=True)
         self.setPosition(index, None)
         self.image_list[index]["visible"] = False
         self.__hidden_image_list.append(index)
