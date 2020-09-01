@@ -101,26 +101,29 @@ class ImageOverwriter:
 
     def grabImage(self, frame, index, palm, depth):
         if self.image_list[index]["visible"]:
-            scale = self.image_list[index]["scale"]
-            if not self.isGrab():
-                self.__base_depth = depth / scale
-            self.image_list[index]["scale"] = depth / self.__base_depth
-
             pos = self.image_list[index]["pos"]
-            x = pos[0] + palm[0] - self.__prev_data["palm"][0]
-            y = pos[1] + palm[1] - self.__prev_data["palm"][1]
-            self.setPosition(index, (x, y))
+            width = (pos[0] - self.image_list[index]["img"].shape[1] // 2, pos[0] + self.image_list[index]["img"].shape[1] // 2)
+            height = (pos[1] - self.image_list[index]["img"].shape[0] // 2, pos[1] + self.image_list[index]["img"].shape[0] // 2)
+            if width[0] <= palm[0] <= width[1] and height[0] <= palm[1] <= height[1]:
+                x = pos[0] + palm[0] - self.__prev_data["palm"][0]
+                y = pos[1] + palm[1] - self.__prev_data["palm"][1]
+                self.setPosition(index, (x, y))
 
-            half_width = self.image_list[index]["img"].shape[1] // 2
-            half_height = self.image_list[index]["img"].shape[0] // 2
-            begin = (x - half_width - 2, y - half_height - 2)
-            end = (x + half_width + 2, y + half_height + 2)
-            cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
+                half_width = self.image_list[index]["img"].shape[1] // 2
+                half_height = self.image_list[index]["img"].shape[0] // 2
+                begin = (x - half_width - 2, y - half_height - 2)
+                end = (x + half_width + 2, y + half_height + 2)
+                cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
 
-            self.__grab_image_index = index
-            if index in self.__hidden_image_list:
-                self.__hidden_image_list.remove(index)
-            self.applyScale(index, restore_default=False)
+                scale = self.image_list[index]["scale"]
+                if not self.isGrab():
+                    self.__base_depth = depth / scale
+                self.image_list[index]["scale"] = depth / self.__base_depth
+
+                self.__grab_image_index = index
+                if index in self.__hidden_image_list:
+                    self.__hidden_image_list.remove(index)
+                self.applyScale(index, restore_default=False)
 
     def releaseImage(self):
         self.__grab_image_index = None
@@ -174,7 +177,7 @@ class ImageOverwriter:
             if image["pos"][0] is None or image["pos"][1] is None:
                 image["visible"] = False
             if i in self.__hidden_image_list:
-                if 0 < palm[0] <= 200:
+                if 0 < palm[0] <= 250:
                     image["visible"] = True
                 else:
                     image["visible"] = False
