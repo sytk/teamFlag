@@ -134,7 +134,8 @@ class HandGesture():
 
             cv2.circle(frame, (self.palm_pos[0], self.palm_pos[1]), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
             # out.write(frame)
-            self.palm_depth = self.__computePalmDepth(points[5], points[17])
+            # print(self.points[5], self.points[17])
+            self.palm_depth = self.__computePalmDepth(self.points[5], self.points[17])
         else:
             self.gesture = "None"
         self.frame = frame
@@ -144,14 +145,14 @@ class HandGesture():
         if len(self.pre_ges) == 3:
             self.pre_ges.pop(0)
         self.pre_ges.append(self.gesture)
-        # print(self.pre_ges.count(self.gesture))
+
         if self.pre_ges.count(self.gesture) == 3:
             self.return_ges = self.gesture
             return self.return_ges
         elif self.gesture == 5:
             return 5
         else:
-            return self.return_ges
+            return None
 
     def getPalmPos(self):
         if self.last_palm_pos == [0,0]:
@@ -167,7 +168,7 @@ class HandGesture():
     def getPalmDepth(self):
         if self.last_palm_depth == 0:
             self.last_palm_depth = self.palm_depth
-        k = 0.2
+        k = 0.4
         LPF = (1 - k) * self.last_palm_depth + k * self.palm_depth;
         self.last_palm_depth = LPF
         return LPF
@@ -199,7 +200,7 @@ class HandGesture():
                 x1, y1 = self.points[connection[1]]
                 cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
         return frame
-        
+
     @staticmethod
     def similarity(v1,v2):
         return np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))

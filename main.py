@@ -16,8 +16,8 @@ WINDOW = "Hand Tracking"
 
 cv2.namedWindow(WINDOW)
 capture = cv2.VideoCapture(0)
-capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 if capture.isOpened():
     hasFrame, frame = capture.read()
@@ -57,12 +57,14 @@ while hasFrame:
     future_list = [f for f in future_list if f.done() == False]
     if len(future_list) < os.cpu_count():
         future_list.append(executor.submit(detector.updateGesture, _frame))
-    print(len(future_list))
+
+    # print(len(future_list))
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
     depth = detector.getPalmDepth()
     finger = detector.getFingerPos()
+    print(ges, palm, depth)
 
     cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
@@ -74,7 +76,6 @@ while hasFrame:
     if ges == 1:
         cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
 
-    print(ges, palm, depth)
 
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1)
