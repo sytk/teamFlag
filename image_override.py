@@ -16,7 +16,7 @@ class ImageOverwriter:
         org_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         scale = 250 / org_img.shape[1]
         img = cv2.resize(org_img, (int(org_img.shape[1] * scale), int(org_img.shape[0] * scale)))
-        dict = {"path": path, "org_img": org_img, "img": img, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None)}
+        dict = {"path": path, "org_img": org_img, "img": img, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None),"hide_img_shape":img.shape}
         self.image_list.append(dict)
         self.__hidden_image_list.insert(0, len(self.image_list) - 1)
 
@@ -29,7 +29,7 @@ class ImageOverwriter:
             scale = 250 / org_img.shape[1]
             org_images.append(org_img)
         img = cv2.resize(org_images[0], (int(org_images[0].shape[1] * scale), int(org_images[0].shape[0] * scale)))
-        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None)}
+        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None), "hide_img_shape":img.shape}
         self.image_list.append(dict)
         self.__hidden_image_list.insert(0, len(self.image_list) - 1)
 
@@ -63,9 +63,9 @@ class ImageOverwriter:
         if pos is not None:
             self.image_list[num]["pos"] = (pos[0], pos[1])
         else:
-            width = self.image_list[num]["img"].shape[1]
-            height = self.image_list[num]["img"].shape[0]
-            start_height = sum([self.image_list[i]["img"].shape[0] for i in range(num)])
+            width = self.image_list[num]["hide_img_shape"][1]
+            height = self.image_list[num]["hide_img_shape"][0]
+            start_height = sum([self.image_list[i]["hide_img_shape"][0] for i in range(num)])
             self.image_list[num]["pos"] = (width // 2, height // 2 + start_height)
 
     def applyScale(self, index, restore_default):
