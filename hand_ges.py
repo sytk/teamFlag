@@ -71,7 +71,8 @@ class HandGesture():
 
         self.finger_pos = [0,0]
         self.last_finger_pos = [0,0]
-
+        self.frame_width = None
+        self.frame_height = None
     def get_pose(self, kp,box):
         x0, y0 = 0,0
         max_size = 400
@@ -84,6 +85,9 @@ class HandGesture():
         return normalize([v],norm='l2')[0]
 
     def updateGesture(self, frame):
+        self.frame_width = frame.shape[1]
+        self.frame_height = frame.shape[0]
+
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         # scale = 1
         # img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
@@ -150,7 +154,18 @@ class HandGesture():
         for pre, curr in zip(self.last_palm_pos, self.palm_pos):
             LPF.append( (1 - k) * pre + k * curr)
         self.last_palm_pos = LPF
-        return [int(p) for p in LPF]
+        LPF = [int(p) for p in LPF]
+
+        if LPF[0] < 0:
+            LPF[0] = 0
+        if LPF[1] < 0:
+            LPF[1] = 0
+        if LPF[0] > self.frame_width:
+            LPF[0] = self.frame_width
+        if LPF[1] > self.frame_height:
+            LPF[1] = self.frame_height
+        return LPF
+
         # return self.palm_pos
 
     def getPalmDepth(self):
