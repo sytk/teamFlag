@@ -29,7 +29,6 @@ import numpy as np
 
 
 class HandGesture():
-    frame = []
     def __init__(self):
         self.palm_model_path = "./models/palm_detection_without_custom_op.tflite"
         self.landmark_model_path = "./models/hand_landmark.tflite"
@@ -86,7 +85,7 @@ class HandGesture():
 
     def updateGesture(self, frame):
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        scale = 1
+        # scale = 1
         # img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
         img_ = img
         hand = self.detector(img_)
@@ -107,25 +106,13 @@ class HandGesture():
                 prob, predicted = torch.max(outputs.data, 1) # 確率が最大のラベルを取得
                 # print(prob, predicted)
 
-            self.gesture = np.asarray(predicted)[0]
-
-            if prob > 0.6:
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.putText(frame,str(predicted),(20,100), font, 2,(255,0,0),2,cv2.LINE_AA)
-                cv2.putText(frame, str(prob),(20,30), font, 1,(255,0,0),2,cv2.LINE_AA)
-            else:
+            if prob < 0.6:
                 self.gesture = 0
+            else:
+                self.gesture = np.asarray(predicted)[0]
 
-            if self.points is not None:
-               self.points = [point/scale for point in self.points]
-
-            #    for point in self.points:
-            #        x, y = point
-            #        cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
-            #    for connection in self.connections:
-            #        x0, y0 = self.points[connection[0]]
-            #        x1, y1 = self.points[connection[1]]
-            #        cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
+            # if self.points is not None:
+            #    self.points = [point/scale for point in self.points]
 
             palms = np.asarray([self.points[0], self.points[5],self.points[9],self.points[13], self.points[17]])
             self.palm_pos = palms.mean(axis=0)
@@ -138,14 +125,15 @@ class HandGesture():
             self.palm_depth = self.__computePalmDepth(self.points[5], self.points[17])
         else:
             self.gesture = "None"
-        self.frame = frame
+            self.pal_pos = [0,0]
+            self.finger_pos = [0,0]
+            self.palm_depth = 0
         return frame
 
     def getGesture(self):
         if len(self.pre_ges) == 3:
             self.pre_ges.pop(0)
         self.pre_ges.append(self.gesture)
-
         if self.pre_ges.count(self.gesture) == 3:
             self.return_ges = self.gesture
             return self.return_ges
@@ -199,6 +187,10 @@ class HandGesture():
                 x0, y0 = self.points[connection[0]]
                 x1, y1 = self.points[connection[1]]
                 cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+
+            cv2.putText(frame,str(self.gesture),(20,frame.shape[0] - 100), font, 2,(255,0,0),2,cv2.LINE_AA)
+
         return frame
 
     @staticmethod
