@@ -25,7 +25,6 @@ else:
     hasFrame = False
 
 detector = HandGesture()
-
 writer = ImageOverwriter()
 
 pc = PdfController()
@@ -39,7 +38,6 @@ writer.addImage("./cat.jpeg")
 writer.setPosition(2, None)
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
-finished = {"window": False, "gesture": False}
 
 start = 0
 future_list = []
@@ -68,22 +66,8 @@ while hasFrame:
 
     cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
-    if Skeletonflag == True: 
-        points = detector.points
-        connections = detector.connections
-        THICKNESS = detector.THICKNESS
-        POINT_COLOR = detector.POINT_COLOR
-        CONNECTION_COLOR = detector.CONNECTION_COLOR
-
-        if points is not None:
-            #points = [point/scale for point in points]
-            for point in points:
-                x, y = point
-                cv2.circle(frame, (int(x), int(y)), THICKNESS * 2, POINT_COLOR, THICKNESS)
-            for connection in connections:
-                x0, y0 = points[connection[0]]
-                x1, y1 = points[connection[1]]
-                cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), CONNECTION_COLOR, THICKNESS)
+    if Skeletonflag == True:
+        frame = detector.drawPalmFrame(frame)
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
@@ -97,10 +81,8 @@ while hasFrame:
     if key == 27:
         break
     elif key == ord('s'):
-        if Skeletonflag == False:
-            Skeletonflag = True
-        elif Skeletonflag == True:
-            Skeletonflag = False
+        Skeletonflag = not Skeletonflag
+
     print(1 / (time.time() - start))
 
 executor.shutdown()

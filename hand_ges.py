@@ -30,11 +30,6 @@ import numpy as np
 
 class HandGesture():
     frame = []
-    points = None
-    connections = []
-    THICKNESS = None
-    POINT_COLOR = None
-    CONNECTION_COLOR = None
     def __init__(self):
         self.palm_model_path = "./models/palm_detection_without_custom_op.tflite"
         self.landmark_model_path = "./models/hand_landmark.tflite"
@@ -44,6 +39,7 @@ class HandGesture():
         # self.idx_m = np.mean(self.poseData,axis=1)
         # self.tree = vptree.VPTree(self.poseData, HandGesture.cosineDistanceMatching)
 
+        self.points = None
         self.POINT_COLOR = (0, 255, 0)
         self.CONNECTION_COLOR = (255, 0, 0)
         self.THICKNESS = 2
@@ -90,13 +86,10 @@ class HandGesture():
 
     def updateGesture(self, frame):
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # scale =
         scale = 1
         # img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
         img_ = img
-        # start = time.time()
         hand = self.detector(img_)
-        # print(time.time()-start)
 
         if hand is not None :#and len(hand) > 0:
             self.points = hand['joints']
@@ -125,6 +118,7 @@ class HandGesture():
 
             if self.points is not None:
                self.points = [point/scale for point in self.points]
+
             #    for point in self.points:
             #        x, y = point
             #        cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
@@ -132,7 +126,7 @@ class HandGesture():
             #        x0, y0 = self.points[connection[0]]
             #        x1, y1 = self.points[connection[1]]
             #        cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
-            
+
             palms = np.asarray([self.points[0], self.points[5],self.points[9],self.points[13], self.points[17]])
             self.palm_pos = palms.mean(axis=0)
             self.palm_pos = [int(p) for p in self.palm_pos]
@@ -173,7 +167,7 @@ class HandGesture():
     def getPalmDepth(self):
         if self.last_palm_depth == 0:
             self.last_palm_depth = self.palm_depth
-        k = 0.4
+        k = 0.2
         LPF = (1 - k) * self.last_palm_depth + k * self.palm_depth;
         self.last_palm_depth = LPF
         return LPF
@@ -194,6 +188,18 @@ class HandGesture():
         B = np.asarray(b)
         return np.linalg.norm(A-B)
 
+    def drawPalmFrame(self, frame):
+        if self.points is not None:
+            #points = [point/scale for point in points]
+            for point in self.points:
+                x, y = point
+                cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
+            for connection in self.connections:
+                x0, y0 = self.points[connection[0]]
+                x1, y1 = self.points[connection[1]]
+                cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
+        return frame
+        
     @staticmethod
     def similarity(v1,v2):
         return np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
