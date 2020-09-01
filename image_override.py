@@ -166,83 +166,85 @@ class ImageOverwriter:
 
         self.__prev_data["ges"] = ges
         self.__prev_data["palm"] = palm
-
-        for i, image in enumerate(self.image_list):
-            if image["pos"][0] is None or image["pos"][1] is None:
-                image["visible"] = False
-            if i in self.__hidden_image_list:
-                if 0 < palm[0] <= 250:
-                    image["visible"] = True
-                else:
+        try:
+            for i, image in enumerate(self.image_list):
+                if image["pos"][0] is None or image["pos"][1] is None:
                     image["visible"] = False
+                if i in self.__hidden_image_list:
+                    if 0 < palm[0] <= 250:
+                        image["visible"] = True
+                    else:
+                        image["visible"] = False
 
-            if image["visible"]:
-                cutimage = image["img"]
-                dptx = image["pos"][0]
-                dpty = image["pos"][1]
+                if image["visible"]:
+                    cutimage = image["img"]
+                    dptx = image["pos"][0]
+                    dpty = image["pos"][1]
 
-                width = frame.shape[1]
-                height = frame.shape[0]
+                    width = frame.shape[1]
+                    height = frame.shape[0]
 
-                outsideflag = True  # はみ出ているかフラグ
-                leftoutsideimg = 0  # 左側の画面外に出ている部分のサイズ
-                rightoutsideimg = 0
-                upoutsideimg = 0
-                downoutsideimg = 0
-                # デフォルト値を設定
-                # cutimage = cutimage[0:reimgheight, 0:reimgwidth]
+                    outsideflag = True  # はみ出ているかフラグ
+                    leftoutsideimg = 0  # 左側の画面外に出ている部分のサイズ
+                    rightoutsideimg = 0
+                    upoutsideimg = 0
+                    downoutsideimg = 0
+                    # デフォルト値を設定
+                    # cutimage = cutimage[0:reimgheight, 0:reimgwidth]
 
-                cutimage1 = 0
-                cutimage2 = cutimage.shape[0]
-                cutimage3 = 0
-                cutimage4 = cutimage.shape[1]
+                    cutimage1 = 0
+                    cutimage2 = cutimage.shape[0]
+                    cutimage3 = 0
+                    cutimage4 = cutimage.shape[1]
 
-                imgwidth = cutimage.shape[1]
-                imgheight = cutimage.shape[0]
-                half_img_width = imgwidth // 2
-                half_img_height = imgheight // 2
+                    imgwidth = cutimage.shape[1]
+                    imgheight = cutimage.shape[0]
+                    half_img_width = imgwidth // 2
+                    half_img_height = imgheight // 2
 
-                # 左にはみ出てたら
-                if dptx - half_img_width < 0:
-                    outsideflag = True
-                    leftoutsideimg = half_img_width - dptx
-                    cutimage3 = leftoutsideimg
+                    # 左にはみ出てたら
+                    if dptx - half_img_width < 0:
+                        outsideflag = True
+                        leftoutsideimg = half_img_width - dptx
+                        cutimage3 = leftoutsideimg
 
-                # 右にはみ出てたら
-                if width < dptx - half_img_width + imgwidth:
-                    outsideflag = True
-                    rightoutsideimg = dptx - half_img_width + imgwidth - width
-                    cutimage4 = imgwidth - int(rightoutsideimg)
+                    # 右にはみ出てたら
+                    if width < dptx - half_img_width + imgwidth:
+                        outsideflag = True
+                        rightoutsideimg = dptx - half_img_width + imgwidth - width
+                        cutimage4 = imgwidth - int(rightoutsideimg)
 
-                # 左にはみ出てたら
-                if dpty - half_img_height < 0:
-                    outsideflag = True
-                    upoutsideimg = half_img_height - dpty
-                    cutimage1 = upoutsideimg
+                    # 左にはみ出てたら
+                    if dpty - half_img_height < 0:
+                        outsideflag = True
+                        upoutsideimg = half_img_height - dpty
+                        cutimage1 = upoutsideimg
 
-                # 下にはみ出てたら
-                if height < dpty - half_img_height + imgheight:
-                    outsideflag = True
-                    downoutsideimg = dpty - half_img_height + imgheight - height
-                    cutimage2 = imgheight - downoutsideimg
+                    # 下にはみ出てたら
+                    if height < dpty - half_img_height + imgheight:
+                        outsideflag = True
+                        downoutsideimg = dpty - half_img_height + imgheight - height
+                        cutimage2 = imgheight - downoutsideimg
 
-                # はみ出ているフラグが立ってたら
-                if outsideflag:
-                    # 上記の結果から画像を切り取り
-                    # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
-                    cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
-                    # カットした写真を合成
-                    # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                    frame[
-                    dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
-                    dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
+                    # はみ出ているフラグが立ってたら
+                    if outsideflag:
+                        # 上記の結果から画像を切り取り
+                        # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
+                        cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
+                        # カットした写真を合成
+                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                        frame[
+                        dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
+                        dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
 
-                # 　外にはみ出る物がない時
-                else:
-                    # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
-                    # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                    frame[dpty - half_img_height:dpty - half_img_width + imgheight,
-                    dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+                    # 　外にはみ出る物がない時
+                    else:
+                        # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
+                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                        frame[dpty - half_img_height:dpty - half_img_width + imgheight,
+                        dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+        except Exception:
+            pass
 
         if self.isGrab():
             index = self.__grab_image_index
