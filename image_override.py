@@ -109,12 +109,6 @@ class ImageOverwriter:
                 y = pos[1] + palm[1] - self.__prev_data["palm"][1]
                 self.setPosition(index, (x, y))
 
-                half_width = self.image_list[index]["img"].shape[1] // 2
-                half_height = self.image_list[index]["img"].shape[0] // 2
-                begin = (x - half_width - 2, y - half_height - 2)
-                end = (x + half_width + 2, y + half_height + 2)
-                cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
-
                 scale = self.image_list[index]["scale"]
                 if not self.isGrab():
                     self.__base_depth = depth / scale
@@ -205,29 +199,31 @@ class ImageOverwriter:
 
                 imgwidth = cutimage.shape[1]
                 imgheight = cutimage.shape[0]
+                half_img_width = imgwidth // 2
+                half_img_height = imgheight // 2
 
                 # 左にはみ出てたら
-                if dptx - imgwidth // 2 < 0:
+                if dptx - half_img_width < 0:
                     outsideflag = True
-                    leftoutsideimg = imgwidth // 2 - dptx
+                    leftoutsideimg = half_img_width - dptx
                     cutimage3 = leftoutsideimg
 
                 # 右にはみ出てたら
-                if width < dptx - imgwidth // 2 + imgwidth:
+                if width < dptx - half_img_width + imgwidth:
                     outsideflag = True
-                    rightoutsideimg = dptx - imgwidth // 2 + imgwidth - width
+                    rightoutsideimg = dptx - half_img_width + imgwidth - width
                     cutimage4 = imgwidth - int(rightoutsideimg)
 
                 # 左にはみ出てたら
-                if dpty - imgheight // 2 < 0:
+                if dpty - half_img_height < 0:
                     outsideflag = True
-                    upoutsideimg = imgheight // 2 - dpty
+                    upoutsideimg = half_img_height - dpty
                     cutimage1 = upoutsideimg
 
                 # 下にはみ出てたら
-                if height < dpty - imgheight // 2 + imgheight:
+                if height < dpty - half_img_height + imgheight:
                     outsideflag = True
-                    downoutsideimg = dpty - imgheight // 2 + imgheight - height
+                    downoutsideimg = dpty - half_img_height + imgheight - height
                     cutimage2 = imgheight - downoutsideimg
 
                 # はみ出ているフラグが立ってたら
@@ -238,13 +234,24 @@ class ImageOverwriter:
                     # カットした写真を合成
                     # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
                     frame[
-                    dpty - imgheight // 2 + upoutsideimg:dpty - imgheight // 2 + imgheight - downoutsideimg,
-                    dptx - imgwidth // 2 + leftoutsideimg:dptx - imgwidth // 2 + imgwidth - rightoutsideimg] = cutimg
+                    dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
+                    dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
 
                 # 　外にはみ出る物がない時
                 else:
                     # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
                     # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                    frame[dpty - imgheight // 2:dpty - imgheight // 2 + imgheight,
-                    dptx - imgwidth // 2:dptx - imgwidth // 2 + imgwidth] = cutimage
+                    frame[dpty - half_img_height:dpty - half_img_width + imgheight,
+                    dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+
+        if self.isGrab():
+            index = self.__grab_image_index
+            half_img_width = self.image_list[index]["img"].shape[1] // 2
+            half_img_height = self.image_list[index]["img"].shape[0] // 2
+            dx = self.image_list[index]["pos"][0] + palm[0] - self.__prev_data["palm"][0]
+            dy = self.image_list[index]["pos"][1] + palm[1] - self.__prev_data["palm"][1]
+            begin = (dx - half_img_width - 2, dy - half_img_height - 2)
+            end = (dx + half_img_width + 2, dy + half_img_height + 2)
+            cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
+
         return frame
