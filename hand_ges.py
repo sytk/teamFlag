@@ -30,6 +30,11 @@ import numpy as np
 
 class HandGesture():
     frame = []
+    points = None
+    connections = []
+    THICKNESS = None
+    POINT_COLOR = None
+    CONNECTION_COLOR = None
     def __init__(self):
         self.palm_model_path = "./models/palm_detection_without_custom_op.tflite"
         self.landmark_model_path = "./models/hand_landmark.tflite"
@@ -87,13 +92,14 @@ class HandGesture():
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         scale = 0.5
         img_ = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
+      
 
         # start = time.time()
         hand = self.detector(img_)
         # print(time.time()-start)
 
         if hand is not None :#and len(hand) > 0:
-            points = hand['joints']
+            self.points = hand['joints']
             box = hand['bbox']
             bkp = hand['base_joints']
 
@@ -116,21 +122,24 @@ class HandGesture():
                 cv2.putText(frame, str(prob),(20,30), font, 1,(255,0,0),2,cv2.LINE_AA)
             else:
                 self.gesture = 0
-
-            if points is not None:
-                points = [point/scale for point in points]
-                for point in points:
-                    x, y = point
-                    cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
-                for connection in self.connections:
-                    x0, y0 = points[connection[0]]
-                    x1, y1 = points[connection[1]]
-                    cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
-
-            palms = np.asarray([points[0], points[5],points[9],points[13], points[17]])
+            
+            if self.points is not None:
+               self.points = [point/scale for point in self.points]
+            #    for point in self.points:
+            #        x, y = point
+            #        cv2.circle(frame, (int(x), int(y)), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
+            #    for connection in self.connections:
+            #        x0, y0 = self.points[connection[0]]
+            #        x1, y1 = self.points[connection[1]]
+            #        cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
+            #print("hand")
+            ##print(self.points)
+            #print(self.connections)
+            
+            palms = np.asarray([self.points[0], self.points[5],self.points[9],self.points[13], self.points[17]])
             self.palm_pos = palms.mean(axis=0)
             self.palm_pos = [int(p) for p in self.palm_pos]
-            self.finger_pos = [int(p) for p in points[8]]
+            self.finger_pos = [int(p) for p in self.points[8]]
 
             cv2.circle(frame, (self.palm_pos[0], self.palm_pos[1]), self.THICKNESS * 2, self.POINT_COLOR, self.THICKNESS)
             # out.write(frame)
