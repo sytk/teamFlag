@@ -132,7 +132,7 @@ class HandGesture():
             self.gesture = "None"
             self.pal_pos = [0,0]
             self.finger_pos = [0,0]
-            self.palm_depth = 0
+            # self.palm_depth = 0
         return frame
 
     def getGesture(self):
