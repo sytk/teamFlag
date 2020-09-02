@@ -137,13 +137,15 @@ class ImageOverwriter:
         self.image_list[index]["visible"] = False
         self.__hidden_image_list.append(index)
 
-    def overwrite(self, frame, ges, palm, depth, bgimg):
+    def overwrite(self, frame, ges, palm, depth, bg):
         overlapped_images = self.checkOverlap(palm)
         prev_ges = self.__prev_data["ges"]
-        ftimg = frame.copy()
-        bggray = cv2.cvtColor(bgimg, cv2.COLOR_BGR2GRAY)
-        bgblur = cv2.GaussianBlur(bggray,(5,5),5)
-        bgblur = cv2.blur(bgblur,(30,30))
+        if bg is not None:
+            ftimg = frame.copy()
+            bgimg = bg.copy()
+            bggray = cv2.cvtColor(bgimg, cv2.COLOR_BGR2GRAY)
+            bgblur = cv2.GaussianBlur(bggray,(5,5),5)
+            bgblur = cv2.blur(bgblur,(30,30))
         if ges != 5:
             self.releaseImage()
         if ges == 2:
@@ -186,8 +188,9 @@ class ImageOverwriter:
                     dptx = image["pos"][0]
                     dpty = image["pos"][1]
 
-                    width = bgimg.shape[1]
-                    height = bgimg.shape[0]
+                    if bg is not None:
+                        width = bgimg.shape[1]
+                        height = bgimg.shape[0]
 
                     width = frame.shape[1]
                     height = frame.shape[0]
@@ -239,36 +242,46 @@ class ImageOverwriter:
                         # 上記の結果から画像を切り取り
                         # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
                         cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
-                        # カットした写真を合成
-                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                        bgimg[
-                        dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
-                        dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
+                        if bg is not None:
+                            # カットした写真を合成
+                            # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                            bgimg[
+                            dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
+                            dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
+                        else:
+                            frame[
+                            dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
+                            dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
 
                     # 　外にはみ出る物がない時
                     else:
-                        # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
-                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                        bgimg[dpty - half_img_height:dpty - half_img_width + imgheight,
-                        dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+                        if bg is not None:
+                            # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
+                            # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                            bgimg[dpty - half_img_height:dpty - half_img_width + imgheight,
+                            dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+                        else:
+                            frame[dpty - half_img_height:dpty - half_img_width + imgheight,
+                            dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
                         
         except Exception:
             pass
-
-        ftgray = cv2.cvtColor(ftimg, cv2.COLOR_BGR2GRAY)
-        ftblur = cv2.GaussianBlur(ftgray,(5,5),5)
-        ftblur = cv2.blur(ftblur,(30,30))    
-        #sabun
-        subimg = cv2.subtract(bgblur, ftblur)
-        #画像の二値化
-        mask = cv2.threshold(subimg, 0, 255, cv2.THRESH_BINARY)[1]
-        #imgのマスク合成画像作成
-        imgmask = cv2.bitwise_and(ftimg, ftimg,mask=mask)
-        # 白 (255, 255, 255) のピクセルを取得する。
-        white_pixels = (imgmask == (0, 0, 0)).all(axis=-1)
-        # 白のピクセルを黒 (0, 0, 0) にする。
-        imgmask[white_pixels] = (130, 170, 180)
-        frame = cv2.addWeighted(imgmask, 0.3, bgimg, 0.7, 0)
+        if bg is not None:
+            ftgray = cv2.cvtColor(ftimg, cv2.COLOR_BGR2GRAY)
+            ftblur = cv2.GaussianBlur(ftgray,(5,5),5)
+            ftblur = cv2.blur(ftblur,(30,30))    
+            #sabun
+            subimg = cv2.subtract(bgblur, ftblur)
+            #画像の二値化
+            mask = cv2.threshold(subimg, 0, 255, cv2.THRESH_BINARY)[1]
+            #imgのマスク合成画像作成
+            imgmask = cv2.bitwise_and(ftimg, ftimg,mask=mask)
+            # 白 (255, 255, 255) のピクセルを取得する。
+            white_pixels = (imgmask == (0, 0, 0)).all(axis=-1)
+            # 白のピクセルを黒 (0, 0, 0) にする。
+            #imgmask[white_pixels] = (130, 170, 180)
+            imgmask[white_pixels] = (255, 255, 255)
+            frame = cv2.addWeighted(imgmask, 0.3, bgimg, 0.7, 0)
 
         if self.isGrab():
             index = self.__grab_image_index
@@ -282,22 +295,3 @@ class ImageOverwriter:
 
         return frame
 
-    def save_bgimg(self):
-        cap = cv2.VideoCapture(0)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        print("cを押して背景写真を撮影\n")
-        while True:
-            ret, frame = cap.read()
-            frame = cv2.flip(frame, 1)
-            showframe = frame.copy()
-            cv2.putText(showframe, "Press the c key to take a background photo.", (10, 100),cv2.FONT_HERSHEY_PLAIN, 3,(0, 0, 0), 3, cv2.LINE_AA)
-
-            cv2.imshow("window_name", showframe)
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord('c'):
-                bgimg = frame
-                break
-        cap.release()
-        cv2.destroyAllWindows()
-        return bgimg

@@ -14,7 +14,6 @@ import copy
 import time
 WINDOW = "Hand Tracking"
 writer = ImageOverwriter()
-bgimg = writer.save_bgimg()
 
 cv2.namedWindow(WINDOW)
 capture = cv2.VideoCapture(0)
@@ -43,6 +42,8 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
 start = 0
 future_list = []
 skeleton_flag = False
+panetrate_flag = False
+bgimg = None
 
 while hasFrame:
     start = time.time()
@@ -70,6 +71,24 @@ while hasFrame:
 
     if skeleton_flag == True:
         frame = detector.drawPalmFrame(frame)
+    
+    if panetrate_flag == True:
+        if  bgimg is None:
+            while True:
+                hasFrame, frame = capture.read()
+                frame = cv2.flip(frame, 1)
+                showframe = frame.copy()
+                cv2.putText(showframe, "Press the c key to take a background photo.", (10, 100),cv2.FONT_HERSHEY_PLAIN, 3,(0, 0, 0), 3, cv2.LINE_AA)
+
+                cv2.imshow(WINDOW, showframe)
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord('p'):
+                    bgimg = frame
+                    #cv2.destroyWindows()
+                    break
+        
+    elif panetrate_flag == False:
+        bgimg = Non
 
     frame = writer.overwrite(frame, ges, palm, depth, bgimg)
 
@@ -83,6 +102,8 @@ while hasFrame:
         break
     elif key == ord('s'):
         skeleton_flag = not skeleton_flag
+    elif key == ord('p'):
+        panetrate_flag = not panetrate_flag
     print(1 / (time.time() - start))
 
 executor.shutdown()
