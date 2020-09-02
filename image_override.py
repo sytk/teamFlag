@@ -16,7 +16,8 @@ class ImageOverwriter:
         org_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         scale = 250 / org_img.shape[1]
         img = cv2.resize(org_img, (int(org_img.shape[1] * scale), int(org_img.shape[0] * scale)))
-        dict = {"path": path, "org_img": org_img, "img": img, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None),"hide_img_shape":img.shape}
+        dict = {"path": path, "org_img": org_img, "img": img, "default_scale": scale, "scale": scale, "visible": False,
+                "pos": (None, None), "hide_img_shape": img.shape}
         self.image_list.append(dict)
         self.__hidden_image_list.insert(0, len(self.image_list) - 1)
 
@@ -29,7 +30,8 @@ class ImageOverwriter:
             scale = 250 / org_img.shape[1]
             org_images.append(org_img)
         img = cv2.resize(org_images[0], (int(org_images[0].shape[1] * scale), int(org_images[0].shape[0] * scale)))
-        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "default_scale": scale, "scale": scale, "visible": False, "pos": (None, None), "hide_img_shape":img.shape}
+        dict = {"path": path_list, "org_img": org_images, "img": img, "index": 0, "default_scale": scale,
+                "scale": scale, "visible": False, "pos": (None, None), "hide_img_shape": img.shape}
         self.image_list.append(dict)
         self.__hidden_image_list.insert(0, len(self.image_list) - 1)
 
@@ -77,9 +79,12 @@ class ImageOverwriter:
             scale = image["scale"]
         if type(image["org_img"]) is list:
             org_img_index = image["index"]
-            self.image_list[index]["img"] = cv2.resize(image["org_img"][org_img_index], (int(image["org_img"][org_img_index].shape[1] * scale), int(image["org_img"][org_img_index].shape[0] * scale)))
+            self.image_list[index]["img"] = cv2.resize(image["org_img"][org_img_index], (
+            int(image["org_img"][org_img_index].shape[1] * scale),
+            int(image["org_img"][org_img_index].shape[0] * scale)))
         else:
-            self.image_list[index]["img"] = cv2.resize(image["org_img"], (int(image["org_img"].shape[1] * scale), int(image["org_img"].shape[0] * scale)))
+            self.image_list[index]["img"] = cv2.resize(image["org_img"], (
+            int(image["org_img"].shape[1] * scale), int(image["org_img"].shape[0] * scale)))
 
     def isGrab(self):
         return self.__grab_image_index is not None
@@ -99,25 +104,22 @@ class ImageOverwriter:
             self.image_list[num]["index"] = index
             self.applyScale(num, restore_default=False)
 
-    def grabImage(self, frame, index, palm, depth):
+    def grabImage(self, index, palm, depth):
         if self.image_list[index]["visible"]:
             pos = self.image_list[index]["pos"]
-            width = (pos[0] - self.image_list[index]["img"].shape[1] // 2, pos[0] + self.image_list[index]["img"].shape[1] // 2)
-            height = (pos[1] - self.image_list[index]["img"].shape[0] // 2, pos[1] + self.image_list[index]["img"].shape[0] // 2)
-            if width[0] <= palm[0] <= width[1] and height[0] <= palm[1] <= height[1]:
-                x = pos[0] + palm[0] - self.__prev_data["palm"][0]
-                y = pos[1] + palm[1] - self.__prev_data["palm"][1]
-                self.setPosition(index, (x, y))
+            x = pos[0] + palm[0] - self.__prev_data["palm"][0]
+            y = pos[1] + palm[1] - self.__prev_data["palm"][1]
+            self.setPosition(index, (x, y))
 
-                scale = self.image_list[index]["scale"]
-                if not self.isGrab():
-                    self.__base_depth = depth / scale
-                self.image_list[index]["scale"] = depth / self.__base_depth
+            scale = self.image_list[index]["scale"]
+            if not self.isGrab():
+                self.__base_depth = depth / scale
+            self.image_list[index]["scale"] = depth / self.__base_depth
 
-                self.__grab_image_index = index
-                if index in self.__hidden_image_list:
-                    self.__hidden_image_list.remove(index)
-                self.applyScale(index, restore_default=False)
+            self.__grab_image_index = index
+            if index in self.__hidden_image_list:
+                self.__hidden_image_list.remove(index)
+            self.applyScale(index, restore_default=False)
 
     def releaseImage(self):
         self.__grab_image_index = None
@@ -152,9 +154,9 @@ class ImageOverwriter:
         if ges == 5:
             if len(overlapped_images) > 0:
                 if prev_ges != 5:
-                    self.grabImage(frame, overlapped_images[-1], palm, depth)
-                elif self.isGrab():
-                    self.grabImage(frame, self.__grab_image_index, palm, depth)
+                    self.grabImage(overlapped_images[-1], palm, depth)
+                elif self.isGrab() and self.__grab_image_index in overlapped_images:
+                    self.grabImage(self.__grab_image_index, palm, depth)
             else:
                 self.releaseImage()
         if ges == 6:
@@ -172,7 +174,7 @@ class ImageOverwriter:
                 if image["pos"][0] is None or image["pos"][1] is None:
                     image["visible"] = False
                 if i in self.__hidden_image_list:
-                    if 0 < palm[0] <= 250:
+                    if i in overlapped_images:
                         image["visible"] = True
                     else:
                         image["visible"] = False
