@@ -13,6 +13,8 @@ import concurrent.futures
 import copy
 import time
 WINDOW = "Hand Tracking"
+writer = ImageOverwriter()
+bgimg = writer.save_bgimg()
 
 cv2.namedWindow(WINDOW)
 capture = cv2.VideoCapture(0)
@@ -25,7 +27,6 @@ else:
     hasFrame = False
 
 detector = HandGesture()
-writer = ImageOverwriter()
 
 pc = PdfController()
 pdf = pc.convertToImage("hacku.pdf")
@@ -70,7 +71,7 @@ while hasFrame:
     if skeleton_flag == True:
         frame = detector.drawPalmFrame(frame)
 
-    frame = writer.overwrite(frame, ges, palm, depth)
+    frame = writer.overwrite(frame, ges, palm, depth, bgimg)
 
     if ges == 1:
         cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
