@@ -31,11 +31,10 @@ pc = PdfController()
 pdf = pc.convertToImage("hacku.pdf")
 writer.addImages(pdf)
 writer.setPosition(0, None)
-
-writer.addImage("./dog.jpeg")
+writer.addImage("./title.jpeg")
 writer.setPosition(1, None)
-writer.addImage("./cat.jpeg")
-writer.setPosition(2, None)
+# writer.addImage("./cat.jpeg")
+# writer.setPosition(2, None)
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
 

@@ -152,15 +152,16 @@ class ImageOverwriter:
         if ges == 5:
             if len(overlapped_images) > 0:
                 if prev_ges != 5:
-                    self.grabImage(frame, overlapped_images[0], palm, depth)
+                    self.grabImage(frame, overlapped_images[-1], palm, depth)
                 elif self.isGrab():
                     self.grabImage(frame, self.__grab_image_index, palm, depth)
             else:
                 self.releaseImage()
         if ges == 6:
             if prev_ges != 6 and len(overlapped_images) > 0:
-                self.hideImage(overlapped_images[0])
+                self.hideImage(overlapped_images[-1])
         if ges == 7:
+            # if prev_ges is not None:
             if prev_ges != 7 and len(self.__hidden_image_list) > 0:
                 self.showImage(palm)
 
