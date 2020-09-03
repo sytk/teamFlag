@@ -169,13 +169,17 @@ class HandGesture():
 
         # return self.palm_pos
 
-    def getPalmDepth(self):
+    def getPalmDepth(self, is_grab):
         if self.last_palm_depth == 0:
             self.last_palm_depth = self.palm_depth
         k = 0.2
         LPF = (1 - k) * self.last_palm_depth + k * self.palm_depth;
         self.last_palm_depth = LPF
-        return LPF
+
+        if is_grab:
+            return LPF
+        else:
+            return self.palm_depth
         # return self.palm_depth
 
     def getFingerPos(self):

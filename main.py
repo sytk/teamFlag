@@ -60,7 +60,7 @@ while hasFrame:
 
     ges = detector.getGesture()
     palm = detector.getPalmPos()
-    depth = detector.getPalmDepth()
+    depth = detector.getPalmDepth(writer.isGrab())
     finger = detector.getFingerPos()
     print(ges, palm, depth)
 
@@ -71,8 +71,8 @@ while hasFrame:
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    if ges == 1:
-        cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
+    # if ges == 1:
+    #     cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
 
     cv2.imshow(WINDOW, frame)
 
