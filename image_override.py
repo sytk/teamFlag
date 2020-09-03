@@ -140,12 +140,13 @@ class ImageOverwriter:
     def overwrite(self, frame, ges, palm, depth, bg):
         overlapped_images = self.checkOverlap(palm)
         prev_ges = self.__prev_data["ges"]
+
         if bg is not None:
             ftimg = frame.copy()
             bgimg = bg.copy()
             bggray = cv2.cvtColor(bgimg, cv2.COLOR_BGR2GRAY)
-            bgblur = cv2.GaussianBlur(bggray,(5,5),5)
-            bgblur = cv2.blur(bgblur,(30,30))
+            #bgblur = cv2.GaussianBlur(bggray,(5,5),5)
+            bgblur = cv2.blur(bggray,(30,30))
         if ges != 5:
             self.releaseImage()
         if ges == 2:
@@ -268,8 +269,8 @@ class ImageOverwriter:
             pass
         if bg is not None:
             ftgray = cv2.cvtColor(ftimg, cv2.COLOR_BGR2GRAY)
-            ftblur = cv2.GaussianBlur(ftgray,(5,5),5)
-            ftblur = cv2.blur(ftblur,(30,30))    
+            #ftblur = cv2.GaussianBlur(ftgray,(5,5),5)
+            ftblur = cv2.blur(ftgray,(30,30))    
             #sabun
             subimg = cv2.subtract(bgblur, ftblur)
             #画像の二値化

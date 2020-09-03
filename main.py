@@ -44,6 +44,7 @@ future_list = []
 skeleton_flag = False
 panetrate_flag = False
 bgimg = None
+bgframe = None
 
 while hasFrame:
     start = time.time()
@@ -73,22 +74,25 @@ while hasFrame:
         frame = detector.drawPalmFrame(frame)
     
     if panetrate_flag == True:
-        if  bgimg is None:
+        if  bgframe is None:
             while True:
                 hasFrame, frame = capture.read()
                 frame = cv2.flip(frame, 1)
-                showframe = frame.copy()
-                cv2.putText(showframe, "Press the c key to take a background photo.", (10, 100),cv2.FONT_HERSHEY_PLAIN, 3,(0, 0, 0), 3, cv2.LINE_AA)
+                bgframe = frame.copy()
+                cv2.putText(frame, "Press the p key to take a background photo.", (10, 100),cv2.FONT_HERSHEY_PLAIN, 3,(0, 0, 0), 3, cv2.LINE_AA)
 
-                cv2.imshow(WINDOW, showframe)
+                cv2.imshow(WINDOW, frame)
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('p'):
-                    bgimg = frame
+                    bgimg = bgframe
                     #cv2.destroyWindows()
                     break
+        elif bgframe is not None:
+            bgimg = bgframe
         
     elif panetrate_flag == False:
-        bgimg = Non
+        bgimg = None
+        print(bgimg)
 
     frame = writer.overwrite(frame, ges, palm, depth, bgimg)
 
@@ -104,6 +108,9 @@ while hasFrame:
         skeleton_flag = not skeleton_flag
     elif key == ord('p'):
         panetrate_flag = not panetrate_flag
+        bg = None
+        #print("panetrate_flag" + panetrate_flag)
+        
     print(1 / (time.time() - start))
 
 executor.shutdown()
