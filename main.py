@@ -13,6 +13,7 @@ import concurrent.futures
 import copy
 import time
 WINDOW = "Hand Tracking"
+writer = ImageOverwriter()
 
 cv2.namedWindow(WINDOW)
 capture = cv2.VideoCapture(0)
@@ -25,7 +26,6 @@ else:
     hasFrame = False
 
 detector = HandGesture()
-writer = ImageOverwriter()
 
 pc = PdfController()
 pdf = pc.convertToImage("hacku.pdf")
@@ -42,6 +42,9 @@ start = 0
 future_list = []
 skeleton_flag = False
 pointer_flag = False
+panetrate_flag = False
+bgimg = None
+bgframe = None
 
 while hasFrame:
     start = time.time()
@@ -69,8 +72,29 @@ while hasFrame:
 
     if skeleton_flag:
         frame = detector.drawPalmFrame(frame)
+    
+    if panetrate_flag == True:
+        if  bgframe is None:
+            while True:
+                hasFrame, frame = capture.read()
+                frame = cv2.flip(frame, 1)
+                bgframe = frame.copy()
+                cv2.putText(frame, "Press the p key to take a background photo.", (10, 100),cv2.FONT_HERSHEY_PLAIN, 3,(0, 0, 0), 3, cv2.LINE_AA)
 
-    frame = writer.overwrite(frame, ges, palm, depth)
+                cv2.imshow(WINDOW, frame)
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord('p'):
+                    bgimg = bgframe
+                    #cv2.destroyWindows()
+                    break
+        elif bgframe is not None:
+            bgimg = bgframe
+        
+    elif panetrate_flag == False:
+        bgimg = None
+        print(bgimg)
+
+    frame = writer.overwrite(frame, ges, palm, depth, bgimg)
 
     if pointer_flag:
         cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
@@ -84,6 +108,10 @@ while hasFrame:
         skeleton_flag = not skeleton_flag
     elif key == ord('p'):
         pointer_flag = not pointer_flag
+    elif key == ord('a'):
+        panetrate_flag = not panetrate_flag
+        bg = None
+        #print("panetrate_flag" + panetrate_flag)
 
     print(1 / (time.time() - start))
 

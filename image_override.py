@@ -137,10 +137,16 @@ class ImageOverwriter:
         self.image_list[index]["visible"] = False
         self.__hidden_image_list.append(index)
 
-    def overwrite(self, frame, ges, palm, depth):
+    def overwrite(self, frame, ges, palm, depth, bg):
         overlapped_images = self.checkOverlap(palm)
         prev_ges = self.__prev_data["ges"]
 
+        if bg is not None:
+            ftimg = frame.copy()
+            bgimg = bg.copy()
+            bggray = cv2.cvtColor(bgimg, cv2.COLOR_BGR2GRAY)
+            #bgblur = cv2.GaussianBlur(bggray,(5,5),5)
+            bgblur = cv2.blur(bggray,(30,30))
         if ges != 5:
             self.releaseImage()
         if ges == 2:
@@ -183,6 +189,10 @@ class ImageOverwriter:
                     cutimage = image["img"]
                     dptx = image["pos"][0]
                     dpty = image["pos"][1]
+
+                    if bg is not None:
+                        width = bgimg.shape[1]
+                        height = bgimg.shape[0]
 
                     width = frame.shape[1]
                     height = frame.shape[0]
@@ -234,20 +244,46 @@ class ImageOverwriter:
                         # 上記の結果から画像を切り取り
                         # cutheight, cutwidth = cutimg.shape[:2] #カットした写真のサイズ
                         cutimg = cutimage[cutimage1:cutimage2, cutimage3:cutimage4]
-                        # カットした写真を合成
-                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                        frame[
-                        dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
-                        dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
+                        if bg is not None:
+                            # カットした写真を合成
+                            # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                            bgimg[
+                            dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
+                            dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
+                        else:
+                            frame[
+                            dpty - half_img_height + upoutsideimg:dpty - half_img_height + imgheight - downoutsideimg,
+                            dptx - half_img_width + leftoutsideimg:dptx - half_img_width + imgwidth - rightoutsideimg] = cutimg
 
                     # 　外にはみ出る物がない時
                     else:
-                        # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
-                        # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
-                        frame[dpty - half_img_height:dpty - half_img_width + imgheight,
-                        dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+                        if bg is not None:
+                            # cutimg = cutimage[0:reimgheight, 0:reimgwidth]
+                            # frame[カーソルの位置Y-画像の半分 : カーソルの位置Y-画像の半分の場所に画像の高さ分を追加、カーソルの位置X-画像の半分 : カーソルの位置X-画像の半分の場所に画像の高さ分を追加]
+                            bgimg[dpty - half_img_height:dpty - half_img_width + imgheight,
+                            dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+                        else:
+                            frame[dpty - half_img_height:dpty - half_img_width + imgheight,
+                            dptx - half_img_width:dptx - half_img_width + imgwidth] = cutimage
+                        
         except Exception:
             pass
+        if bg is not None:
+            ftgray = cv2.cvtColor(ftimg, cv2.COLOR_BGR2GRAY)
+            #ftblur = cv2.GaussianBlur(ftgray,(5,5),5)
+            ftblur = cv2.blur(ftgray,(30,30))    
+            #sabun
+            subimg = cv2.subtract(bgblur, ftblur)
+            #画像の二値化
+            mask = cv2.threshold(subimg, 0, 255, cv2.THRESH_BINARY)[1]
+            #imgのマスク合成画像作成
+            imgmask = cv2.bitwise_and(ftimg, ftimg,mask=mask)
+            # 白 (255, 255, 255) のピクセルを取得する。
+            white_pixels = (imgmask == (0, 0, 0)).all(axis=-1)
+            # 白のピクセルを黒 (0, 0, 0) にする。
+            #imgmask[white_pixels] = (130, 170, 180)
+            imgmask[white_pixels] = (255, 255, 255)
+            frame = cv2.addWeighted(imgmask, 0.3, bgimg, 0.7, 0)
 
         if self.isGrab():
             index = self.__grab_image_index
@@ -260,3 +296,4 @@ class ImageOverwriter:
             cv2.rectangle(frame, begin, end, (255, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
 
         return frame
+
