@@ -209,7 +209,10 @@ class HandGesture():
                 cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), self.CONNECTION_COLOR, self.THICKNESS)
             font = cv2.FONT_HERSHEY_SIMPLEX
 
-            cv2.putText(frame,str(self.gesture),(20,frame.shape[0] - 100), font, 2,(255,0,0),2,cv2.LINE_AA)
+            cv2.rectangle(frame, (0, frame.shape[0] - 100), (200, frame.shape[0]), (255,255,255), -1)
+
+            cv2.putText(frame,str(self.gesture),(20,frame.shape[0] - 40), font, 2,(255,0,0),2,cv2.LINE_AA)
+
 
         return frame
 

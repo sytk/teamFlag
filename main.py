@@ -41,6 +41,7 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
 start = 0
 future_list = []
 skeleton_flag = False
+pointer_flag = False
 
 while hasFrame:
     start = time.time()
@@ -64,15 +65,15 @@ while hasFrame:
     finger = detector.getFingerPos()
     print(ges, palm, depth)
 
-    cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
+    # cv2.circle(frame, (palm[0], palm[1]), 4, (0, 255, 0), 2)
 
-    if skeleton_flag == True:
+    if skeleton_flag:
         frame = detector.drawPalmFrame(frame)
 
     frame = writer.overwrite(frame, ges, palm, depth)
 
-    # if ges == 1:
-    #     cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
+    if pointer_flag:
+        cv2.circle(frame, (finger[0], finger[1]), 4, (0, 0, 255), 2)
 
     cv2.imshow(WINDOW, frame)
 
@@ -81,6 +82,9 @@ while hasFrame:
         break
     elif key == ord('s'):
         skeleton_flag = not skeleton_flag
+    elif key == ord('p'):
+        pointer_flag = not pointer_flag
+
     print(1 / (time.time() - start))
 
 executor.shutdown()
