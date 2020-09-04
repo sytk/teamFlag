@@ -79,11 +79,11 @@ while hasFrame:
                 hasFrame, frame = capture.read()
                 frame = cv2.flip(frame, 1)
                 bgframe = frame.copy()
-                cv2.putText(frame, "Press the p key to take a background photo.", (10, 100),cv2.FONT_HERSHEY_PLAIN, 3,(0, 0, 0), 3, cv2.LINE_AA)
+                cv2.putText(frame, "Press the a key to take a background photo.", (10, 100),cv2.FONT_HERSHEY_PLAIN, 3,(0, 0, 0), 3, cv2.LINE_AA)
 
                 cv2.imshow(WINDOW, frame)
                 key = cv2.waitKey(1) & 0xFF
-                if key == ord('p'):
+                if key == ord('a'):
                     bgimg = bgframe
                     #cv2.destroyWindows()
                     break
