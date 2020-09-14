@@ -31,8 +31,13 @@ pc = PdfController()
 pdf = pc.convertToImage("hacku.pdf")
 writer.addImages(pdf)
 writer.setPosition(0, None)
-writer.addImage("./kame.jpeg")
+writer.addImage("./title.jpeg")
 writer.setPosition(1, None)
+
+pdf2 = pc.convertToImage("plus.pdf")
+writer.addImages(pdf2)
+writer.setPosition(2, None)
+
 # writer.addImage("./cat.jpeg")
 # writer.setPosition(2, None)
 
